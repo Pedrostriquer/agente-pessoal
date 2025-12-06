@@ -1,0 +1,43 @@
+/* src/App.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  outline: none;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #f8fafc;
+  overflow-x: hidden;
+}
+
+.app-container {
+  width: 100vw;
+  min-height: 100vh;
+}
+
+/* O app-main é apenas um container flexível */
+.app-main {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Estilos do Placeholder */
+.placeholder-container {
+  padding: 40px;
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #0f172a;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
+  box-sizing: border-box;
+}
+
+.placeholder-container h1 { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+.placeholder-container p { color: #64748b; }
+
+/* Classes que controlam a margem (usadas no PlaceholderPage e compatíveis com as outras pgs) */
+.placeholder-container.open { margin-left: 260px; width: calc(100% - 260px); }
+.placeholder-container.closed { margin-left: 80px; width: calc(100% - 80px); }
+.placeholder-container.mobile { margin-left: 0; width: 100%; padding: 20px; }

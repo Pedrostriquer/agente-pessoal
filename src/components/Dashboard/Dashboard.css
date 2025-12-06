@@ -1,0 +1,223 @@
+/* --- CONFIG GERAL --- */
+.dsh-wrapper {
+  /* Transição suave para Sidebar */
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
+  min-height: 100vh;
+  padding: 30px;
+  background-color: #f8fafc;
+  box-sizing: border-box;
+  font-family: 'Outfit', sans-serif;
+  color: #0f172a;
+}
+
+/* Margem dinâmica baseada na Sidebar */
+.dsh-wrapper.sidebar-open {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
+
+.dsh-wrapper.sidebar-closed {
+  margin-left: 80px; /* Sidebar recolhida */
+  width: calc(100% - 80px);
+}
+
+*:focus { outline: none; }
+
+/* HEADER */
+.dsh-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 25px;
+}
+.header-left { display: flex; align-items: center; gap: 15px; }
+
+.menu-btn-mobile { 
+  display: none; /* Desktop esconde */
+  background: transparent; 
+  border: none; 
+  cursor: pointer; 
+  padding: 4px;
+  border-radius: 4px;
+  
+  /* Garante cor e alinhamento */
+  color: #0f172a; 
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-btn-mobile:active {
+  background-color: #e2e8f0;
+}
+.dsh-header h1 { font-size: 24px; font-weight: 800; margin: 0; }
+.dsh-header p { margin: 2px 0 0 0; color: #64748b; font-size: 13px; }
+.dsh-date {
+  background: white; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid #e2e8f0; color: #475569; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; font-size: 12px;
+}
+
+/* --- GRID LAYOUT ALINHADO --- */
+.dsh-grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr; /* 3 Colunas iguais */
+  grid-template-rows: 240px 320px 240px; /* Alturas fixas para alinhamento */
+  gap: 20px;
+  grid-template-areas: 
+    "agenda agenda finance"
+    "todo market ideas"
+    "study study plans";
+}
+
+/* Áreas */
+.area-agenda  { grid-area: agenda; }
+.area-finance { grid-area: finance; }
+.area-todo    { grid-area: todo; }
+.area-market  { grid-area: market; }
+.area-ideas   { grid-area: ideas; }
+.area-study   { grid-area: study; }
+.area-plans   { grid-area: plans; }
+
+/* BASE DO CARD */
+.dsh-card {
+  background: white; border-radius: 16px; border: 1px solid #e2e8f0;
+  padding: 20px; display: flex; flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+  overflow: hidden; /* Garante que scroll interno funcione */
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; flex-shrink: 0;
+}
+.card-header h3 { font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: #334155; }
+.badge { background: #f1f5f9; color: #64748b; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+
+/* INPUTS CLEAN (BRANCO E CINZA) */
+.input-row-clean { display: flex; gap: 8px; margin-bottom: 10px; flex-shrink: 0; }
+.input-row-clean input {
+  flex: 1; padding: 8px 10px; border-radius: 8px; 
+  border: 1px solid #e2e8f0; background: white; 
+  color: #334155; font-size: 12px;
+}
+.input-row-clean input:focus { border-color: #10b981; }
+.input-row-clean button {
+  width: 32px; background: #f1f5f9; color: #10b981; border: 1px solid #e2e8f0;
+  border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.input-row-clean button:hover { background: #10b981; color: white; border-color: #10b981; }
+
+/* 1. AGENDA (TOPO) */
+.agenda-layout { display: flex; gap: 20px; height: 100%; overflow: hidden; }
+.agenda-items { flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+.agenda-row { display: flex; gap: 10px; padding: 8px; border-radius: 6px; background: #f8fafc; font-size: 12px; align-items: center; }
+.agenda-row.urgent { background: #fef2f2; border-left: 3px solid #ef4444; }
+.agenda-row.normal { background: #f0fdf4; border-left: 3px solid #10b981; }
+.agenda-row .time { font-weight: 700; color: #64748b; width: 40px; }
+
+.mini-calendar-grid { 
+  width: 200px; display: grid; grid-template-columns: repeat(7, 1fr); 
+  gap: 2px; align-content: flex-start;
+}
+.cal-day-mini { 
+  height: 24px; display: flex; align-items: center; justify-content: center; 
+  font-size: 11px; color: #64748b; border-radius: 4px; cursor: pointer; 
+}
+.cal-day-mini:hover { background: #f1f5f9; }
+.cal-day-mini.active { background: #0f172a; color: white; font-weight: 700; }
+
+/* 2. FINANÇAS */
+.fin-content { display: flex; flex-direction: column; height: 100%; justify-content: center; }
+.fin-big-val { text-align: center; margin-bottom: 20px; }
+.fin-big-val small { text-transform: uppercase; font-size: 10px; font-weight: 700; color: #94a3b8; }
+.fin-big-val h2 { font-size: 28px; margin: 0; color: #0f172a; }
+.fin-mini-list { display: flex; flex-direction: column; gap: 8px; padding: 0 10px; }
+.mini-trans { font-size: 12px; display: flex; align-items: center; gap: 8px; color: #475569; }
+
+/* 3. LISTAS (TO-DO, MERCADO, IDEIAS) */
+.list-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+
+/* Items To-Do */
+.item-row { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.item-row:hover { background: #f8fafc; }
+.check-circle { 
+  width: 16px; height: 16px; border: 1px solid #cbd5e1; border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; 
+}
+.check-circle.checked { background: #10b981; border-color: #10b981; }
+.risked { text-decoration: line-through; color: #94a3b8; }
+
+/* Items Mercado */
+.checkbox-sq {
+  width: 14px; height: 14px; border: 1px solid #cbd5e1; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+}
+.checkbox-sq.checked { background: #10b981; border-color: #10b981; }
+
+/* Items Ideias */
+.idea-row-simple { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12px; 
+}
+.idea-row-simple button { background: none; border: none; color: #cbd5e1; cursor: pointer; }
+.idea-row-simple button:hover { color: #ef4444; }
+
+/* 5. ESTUDOS (LISTA SIMPLES) */
+.study-container { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.study-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+.tab-btn { background: none; border: none; font-size: 12px; color: #64748b; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.tab-btn.active { background: #f0fdf4; color: #10b981; }
+
+.study-content-cols { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+.study-col { flex: 1; display: flex; flex-direction: column; }
+.col-title { font-size: 11px; text-transform: uppercase; color: #94a3b8; margin: 0 0 8px 0; }
+.simple-list { display: flex; flex-direction: column; gap: 6px; }
+.simple-list-item { 
+  display: flex; align-items: center; gap: 8px; font-size: 12px; color: #334155; 
+  padding: 4px 0;
+}
+.simple-list-item svg { color: #94a3b8; }
+.link-text { color: #10b981; text-decoration: none; font-weight: 500; }
+
+/* 6. PLANEJAMENTO (SEM INPUTS) */
+.plans-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.plan-block { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+.plan-block.open { border-color: #10b981; }
+.plan-header { padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: white; }
+.plan-meta strong { display: block; font-size: 12px; margin-bottom: 4px; }
+.progress-track { width: 60px; height: 4px; background: #f1f5f9; border-radius: 2px; }
+.progress-fill { height: 100%; background: #10b981; }
+
+.plan-steps-list { padding: 8px; background: #f8fafc; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #f1f5f9; }
+.plan-step-item { display: flex; align-items: center; gap: 8px; font-size: 11px; cursor: pointer; }
+.step-check { width: 8px; height: 8px; border: 1px solid #cbd5e1; border-radius: 50%; background: white; }
+.step-check.checked { background: #10b981; border-color: #10b981; }
+
+/* --- RESPONSIVIDADE (MOBILE) --- */
+@media (max-width: 1024px) {
+  .dsh-grid-container {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      "agenda finance"
+      "todo market"
+      "ideas ideas"
+      "study study"
+      "plans plans";
+  }
+}
+
+@media (max-width: 600px) {
+  /* Remove margem quando no celular */
+  .dsh-wrapper.sidebar-open, .dsh-wrapper.sidebar-closed { 
+    margin-left: 0; 
+    width: 100%; 
+    padding: 15px; 
+  }
+  
+  .dsh-grid-container {
+    display: flex; flex-direction: column; gap: 15px;
+  }
+  .mini-calendar-grid { width: 100%; }
+  .menu-btn-mobile { 
+    display: flex; 
+  }
+}
