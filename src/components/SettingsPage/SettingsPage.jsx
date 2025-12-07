@@ -2,11 +2,18 @@ import React, { useState } from 'react';
 import './SettingsPage.css';
 import { 
   User, Mail, Phone, CreditCard, Bot, 
-  Mic, Sparkles, Shield, Edit3, Smartphone 
+  Mic, Sparkles, Shield, Edit3, Smartphone,
+  Moon, Sun, Monitor 
 } from 'lucide-react';
+
+// Importa o contexto do tema
+import { useTheme } from '../../context/ThemeContext';
 
 const SettingsPage = ({ isSidebarOpen }) => {
   
+  // Utiliza o hook para acessar o tema e a função de troca
+  const { theme, toggleTheme } = useTheme();
+
   // --- MOCK DATA (Simulando o que veio do StartingIA) ---
   const [userData] = useState({
     nickname: 'Carlos Eduardo',
@@ -42,9 +49,44 @@ const SettingsPage = ({ isSidebarOpen }) => {
 
       <div className="settings-grid">
         
-        {/* COLUNA ESQUERDA: USUÁRIO E PLANO */}
+        {/* COLUNA ESQUERDA: APARÊNCIA, USUÁRIO E PLANO */}
         <div className="settings-col">
           
+          {/* --- NOVO CARD: APARÊNCIA --- */}
+          <div className="settings-card">
+            <div className="card-header-simple">
+              <h3><Monitor size={18}/> Aparência do App</h3>
+            </div>
+            
+            <div 
+              className="info-item" 
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {theme === 'light' ? <Sun size={20} color="#f59e0b"/> : <Moon size={20} color="#8b5cf6"/>}
+                <span style={{ fontSize: '14px', fontWeight: '600' }}>
+                  Modo {theme === 'light' ? 'Claro' : 'Escuro'}
+                </span>
+              </div>
+              
+              <button 
+                onClick={toggleTheme}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color, #cbd5e1)', /* Usa variável ou fallback */
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  color: 'inherit',
+                  transition: '0.2s'
+                }}
+              >
+                Trocar
+              </button>
+            </div>
+          </div>
+
           {/* 1. PERFIL DO USUÁRIO */}
           <div className="settings-card">
             <div className="card-header-simple">

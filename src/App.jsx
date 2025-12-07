@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 // --- IMPORTAÇÃO DOS COMPONENTES ---
 import StartingIA_V3 from './components/StartingIA_V3/StartingIA_V3';
-import LoginPage from './components/LoginPage/LoginPage'; // Importando Login
+import LoginPage from './components/LoginPage/LoginPage'; 
 import Sidebar from './components/Sidebar/Sidebar';
 import Dashboard from './components/Dashboard/Dashboard';
 import TasksPage from './components/TasksPage/TasksPage';
@@ -15,34 +15,27 @@ import SettingsPage from './components/SettingsPage/SettingsPage';
 // Componente "Guardião" para rotas protegidas
 const ProtectedRoutes = ({ isLoggedIn, children }) => {
   if (!isLoggedIn) {
-    // Se não estiver logado, redireciona para a página de login
     return <Navigate to="/login" replace />;
   }
-  // Se estiver logado, renderiza o conteúdo (layout principal)
   return children;
 };
-
 
 function App() {
   const [isConfigured] = useState(true); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Estado de Autenticação
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Começa deslogado
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
-  // Mock do Usuário
   const userData = {
     userName: 'Carlos Eduardo',
     agentName: 'Jarvis',
     agentAvatar: '🤖'
   };
 
-  // Funções de Login/Logout
   const handleLogin = () => setIsLoggedIn(true);
   const handleLogout = () => setIsLoggedIn(false);
 
-  // Detectar Mobile
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
@@ -60,7 +53,6 @@ function App() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Objeto com as props comuns para passar às páginas
   const layoutProps = {
     isSidebarOpen,
     isMobile,
@@ -71,22 +63,25 @@ function App() {
     <Router>
       <div className="app-container">
         {!isConfigured ? (
-          <StartingIA_V3 onFinish={() => setIsConfigured(true)} />
+          <StartingIA_V3 />
         ) : (
           <Routes>
+            {/* ROTA PÚBLICA PARA CRIAÇÃO DO AGENTE (Sem botão no menu) */}
+            <Route path="/start" element={<StartingIA_V3 />} />
+
             {/* ROTA DE LOGIN */}
             <Route 
               path="/login" 
               element={
                 isLoggedIn 
-                  ? <Navigate to="/" replace /> // Se já logado, vai pro dashboard
+                  ? <Navigate to="/" replace /> 
                   : <LoginPage onLoginSuccess={handleLogin} />
               }
             />
 
             {/* ROTAS PROTEGIDAS */}
             <Route 
-              path="/*" // Qualquer outra rota
+              path="/*" 
               element={
                 <ProtectedRoutes isLoggedIn={isLoggedIn}>
                   <div className="app-main">
@@ -95,10 +90,9 @@ function App() {
                       toggleSidebar={toggleSidebar} 
                       isMobile={isMobile}
                       userData={userData}
-                      onLogout={handleLogout} // Passando a função de logout
+                      onLogout={handleLogout}
                     />
                     
-                    {/* Conteúdo das Páginas */}
                     <Routes>
                       <Route path="/" element={<Dashboard {...layoutProps} />} />
                       <Route path="/tasks" element={<TasksPage {...layoutProps} />} />

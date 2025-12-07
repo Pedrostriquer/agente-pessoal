@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './StartingIA_V3.css';
-import { createUserService } from '../../services/api'; // Importando o serviço
+import { createUserService } from '../../services/api';
 
 const StartingIA_V3 = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Estado de carregamento
+  const [isLoading, setIsLoading] = useState(false);
 
   // Estados do Agente
   const [gender, setGender] = useState('female');
@@ -14,7 +16,7 @@ const StartingIA_V3 = () => {
   const [userNickname, setUserNickname] = useState('');
   
   // Estados do Telefone
-  const [ddi, setDdi] = useState('55'); // Sem o + para facilitar o payload
+  const [ddi, setDdi] = useState('55');
   const [ddd, setDdd] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -41,31 +43,22 @@ const StartingIA_V3 = () => {
   const traitsList = ['Organizado', 'Criativo', 'Bem-humorado', 'Rigoroso', 'Empático', 'Sarcástico', 'Formal', 'Motivador'];
   const TOTAL_STEPS = 5; 
 
-  // --- FUNÇÃO PARA MAPEAR GÊNERO PARA ID DE VOZ ---
   const getVoiceId = (gen) => {
-    // IDs de exemplo da ElevenLabs
     if (gen === 'female') return 'EXAVOICE_FEMALE_ID'; 
-    if (gen === 'male') return 'EXAVOICE_MALE_ID';
-    return 'EXAVOICE_ROBOT_ID';
+    return 'EXAVOICE_MALE_ID';
   };
 
   // --- NAVEGAÇÃO ---
   const nextStep = () => {
-    // Validações
     if (step === 1 && !gender) return alert("Selecione um gênero.");
     if (step === 2 && !aiName) return alert("Digite um nome para a IA.");
     if (step === 3 && selectedTraits.length === 0) return alert("Selecione pelo menos uma personalidade.");
     if (step === 4 && !userNickname) return alert("Digite seu nome.");
     
-    // VALIDAÇÃO DE TELEFONE (Passo 5)
     if (step === 5) {
       if (!ddd || ddd.length < 2) return alert("Digite um DDD válido.");
       if (!phone) return alert("Digite o número do telefone.");
-      
-      // Verifica se tem 9 dígitos
       if (phone.length !== 9) return alert("O número deve ter exatamente 9 dígitos.");
-      
-      // Verifica se começa com 9
       if (phone.charAt(0) !== '9') return alert("O número de celular deve começar com o dígito 9.");
     }
 
@@ -114,39 +107,48 @@ const StartingIA_V3 = () => {
 
   const getAvatar = () => {
     if (gender === 'male') return '👨‍💼';
-    if (gender === 'robot') return '🤖';
     return '👩‍💼';
   };
 
-  // --- FUNÇÃO FINAL: CRIAR USUÁRIO NA API ---
+  // --- FUNÇÃO FINAL: CRIAR USUÁRIO NA API (Com Tratamento de Erro Melhorado) ---
   const handleFinalSubmit = async () => {
     if (!email || !password) return alert("Preencha e-mail e senha.");
 
     setIsLoading(true);
 
-    // Montando o Payload conforme solicitado
     const payload = {
-      full_name: userNickname, // Usando o nickname como nome completo por enquanto
+      full_name: userNickname,
       country_code: ddi,
       area_code: ddd,
       phone_number: phone,
       user_nickname: userNickname,
       agent_nickname: aiName,
-      agent_gender: gender === 'female' ? 'Feminino' : gender === 'male' ? 'Masculino' : 'Robótica',
+      agent_gender: gender === 'female' ? 'Feminino' : 'Masculino',
       agent_voice_id: getVoiceId(gender),
       agent_personality: selectedTraits
     };
 
     try {
-      console.log("Enviando Payload:", payload); // Para debug
-      const result = await createUserService(payload);
+      console.log("Enviando Payload:", payload);
+      await createUserService(payload);
       
-      console.log("Sucesso:", result);
-      alert("Agente criado com sucesso! Redirecionando para pagamento...");
-      // Aqui você redirecionaria para o gateway de pagamento (Stripe/MercadoPago)
+      alert("Agente criado com sucesso! Redirecionando para login...");
+      navigate('/login');
       
     } catch (error) {
-      alert("Erro ao criar agente. Tente novamente.");
+      console.error("Erro na criação:", error);
+      
+      const msg = error.message || "";
+
+      // Verifica se a mensagem contém o texto específico de duplicação
+      // A API retorna: "Já existe um usuário cadastrado com este número de telefone."
+      if (msg.toLowerCase().includes("já existe um usuário") || msg.toLowerCase().includes("already exists")) {
+        alert("Ops! Já existe uma conta vinculada a este telefone. \n\nVamos te redirecionar para o Login.");
+        navigate('/login');
+      } else {
+        // Erro genérico
+        alert(`Erro ao criar conta: ${msg}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -181,9 +183,6 @@ const StartingIA_V3 = () => {
                 <button className={`option-card ${gender === 'male' ? 'active' : ''}`} onClick={() => setGender('male')}>
                   <span className="opt-icon">👨</span> Masculina
                 </button>
-                <button className={`option-card ${gender === 'robot' ? 'active' : ''}`} onClick={() => setGender('robot')}>
-                  <span className="opt-icon">🤖</span> Robótica
-                </button>
               </div>
             </div>
           )}
@@ -216,7 +215,6 @@ const StartingIA_V3 = () => {
             </div>
           )}
 
-          {/* PASSO 5: WHATSAPP COM VALIDAÇÃO */}
           {step === 5 && (
             <div className="step-wrapper">
               <h1 className="v3-title">Qual seu WhatsApp?</h1>
@@ -266,7 +264,6 @@ const StartingIA_V3 = () => {
       {/* --- LADO DIREITO --- */}
       <div className="v3-right-panel">
         
-        {/* PREVIEW CARD */}
         <div className="preview-card-wrapper">
           <div className="live-card">
             <div className="card-header">
@@ -286,7 +283,6 @@ const StartingIA_V3 = () => {
           </div>
         </div>
 
-        {/* PASSO 6: PLANOS */}
         {step === 6 && (
           <div className="checkout-details fade-in-delayed">
             <h2 className="checkout-title">Escolha o plano ideal.</h2>
@@ -341,7 +337,6 @@ const StartingIA_V3 = () => {
           </div>
         )}
 
-        {/* PASSO 7: CONTA E ENVIO API */}
         {step === 7 && (
           <div className="account-details fade-in-delayed">
             <div className="account-header">

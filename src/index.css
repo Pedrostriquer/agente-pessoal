@@ -66,3 +66,110 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+:root {
+  /* Cores Padrão (Light Mode) */
+  --bg-body: #f8fafc;        /* A cor que não estava mudando */
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #f1f5f9;
+  --text-main: #0f172a;
+  --text-sub: #64748b;
+  --border-color: #e2e8f0;
+  --accent-color: #10b981;
+  --sidebar-bg: #ffffff;
+}
+
+/* --- MODO ESCURO (Dark Mode) --- */
+[data-theme="dark"] {
+  --bg-body: #0f172a;        /* Fundo principal escuro */
+  --bg-card: #1e293b;        /* Cards levemente mais claros */
+  --bg-input: #334155;       /* Inputs escuros */
+  --bg-hover: #334155;
+  --text-main: #f8fafc;      /* Texto claro */
+  --text-sub: #94a3b8;
+  --border-color: #334155;
+  --accent-color: #34d399;
+  --sidebar-bg: #1e293b;
+}
+
+/* --- APLICAÇÃO GLOBAL E FORÇADA --- */
+
+/* 1. Transição Suave para tudo */
+body, div, button, input, textarea, aside {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 2. Forçar fundo da página e wrappers principais */
+/* Isso ataca especificamente o #f8fafc que estava te incomodando */
+body, 
+[data-theme="dark"] .dsh-wrapper,
+[data-theme="dark"] .finance-wrapper,
+[data-theme="dark"] .tasks-page-wrapper,
+[data-theme="dark"] .study-wrapper,
+[data-theme="dark"] .settings-wrapper,
+[data-theme="dark"] .login-page-wrapper {
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+}
+
+/* 3. Forçar fundo dos Cards e Sidebar */
+[data-theme="dark"] .sidebar-container,
+[data-theme="dark"] .dsh-card,
+[data-theme="dark"] .summary-card,
+[data-theme="dark"] .fin-panel,
+[data-theme="dark"] .settings-card,
+[data-theme="dark"] .list-card,
+[data-theme="dark"] .plan-card-item,
+[data-theme="dark"] .day-card,
+[data-theme="dark"] .subject-card,
+[data-theme="dark"] .subject-header,
+[data-theme="dark"] .subject-body {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+/* 4. Elementos Internos (Inputs, Botões secundários) */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .user-card,  /* Card do usuário na sidebar */
+[data-theme="dark"] .collapse-toggle-btn, /* Botão de fechar sidebar */
+[data-theme="dark"] .nav-btn:hover,
+[data-theme="dark"] .count-pill,
+[data-theme="dark"] .add-row input,
+[data-theme="dark"] .item-row:hover,
+[data-theme="dark"] .universal-item {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+/* 5. Textos e Títulos */
+[data-theme="dark"] h1, 
+[data-theme="dark"] h2, 
+[data-theme="dark"] h3, 
+[data-theme="dark"] h4,
+[data-theme="dark"] strong,
+[data-theme="dark"] .nav-label-text {
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] p, 
+[data-theme="dark"] span, 
+[data-theme="dark"] small,
+[data-theme="dark"] .nav-btn {
+  color: var(--text-sub);
+}
+
+/* 6. Ícones e Detalhes Específicos */
+[data-theme="dark"] .mobile-menu-trigger {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+/* Ajuste para o botão da Sidebar ativo ficar visível */
+[data-theme="dark"] .nav-btn.active {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: var(--accent-color) !important;
+}
