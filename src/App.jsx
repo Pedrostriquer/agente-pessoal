@@ -25,7 +25,8 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
-  const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  // Verifica se já existe um token no localStorage ao carregar
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('user_token')); 
 
   const userData = {
     userName: 'Carlos Eduardo',
@@ -33,8 +34,18 @@ function App() {
     agentAvatar: '🤖'
   };
 
-  const handleLogin = () => setIsLoggedIn(true);
-  const handleLogout = () => setIsLoggedIn(false);
+  // 💥 CORREÇÃO CRÍTICA DE AUTENTICAÇÃO
+  const handleLogin = (data) => {
+    // 1. Salva APENAS o accessToken para que o apiRequest o utilize corretamente
+    localStorage.setItem('user_token', data.accessToken);
+    // 2. Define o estado como logado
+    setIsLoggedIn(true);
+  };
+  
+  const handleLogout = () => {
+    localStorage.removeItem('user_token'); // Remove o token ao sair
+    setIsLoggedIn(false);
+  };
 
   useEffect(() => {
     const handleResize = () => {

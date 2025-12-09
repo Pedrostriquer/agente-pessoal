@@ -1,25 +1,35 @@
-import { API_BASE_URL, TEST_WA_ID, NGROK_HEADERS, handleResponse } from './api';
+import { apiRequest } from './api';
 
 export const getFinanceReport = async () => {
-  const response = await fetch(`${API_BASE_URL}/finance/report`, {
-    method: 'POST',
-    headers: NGROK_HEADERS, // Inclui o bypass do Ngrok
-    body: JSON.stringify({ wa_id: TEST_WA_ID })
+  return apiRequest('/finance/report', { method: 'GET' });
+};
+
+// --- NOVA FUNÇÃO DE BUSCA (PAGINADA) ---
+export const searchTransactions = async (page = 1, limit = 20, category = '', description = '') => {
+  const params = new URLSearchParams({
+    page,
+    limit,
+    ...(category && { category }),
+    ...(description && { description })
   });
-  return handleResponse(response);
+  
+  return apiRequest(`/finance/search?${params.toString()}`, { method: 'GET' });
+};
+
+// Mantive a função antiga caso use em outro lugar, mas o foco é a searchTransactions
+export const getTransactionsList = async (limit = 20) => {
+  return apiRequest(`/finance/transactions?limit=${limit}`, { method: 'GET' });
 };
 
 export const addTransaction = async (amount, type, description, category = 'Geral') => {
-  const response = await fetch(`${API_BASE_URL}/finance/add`, {
+  return apiRequest('/finance/transaction', {
     method: 'POST',
-    headers: NGROK_HEADERS, // Inclui o bypass do Ngrok
-    body: JSON.stringify({
-      wa_id: TEST_WA_ID,
-      amount: Number(amount),
-      type: type, // 'expense' ou 'income'
-      description,
-      category
+    body: JSON.stringify({ 
+      amount: Number(amount), 
+      type, 
+      description, 
+      category,
+      date: new Date().toISOString()
     })
   });
-  return handleResponse(response);
 };
