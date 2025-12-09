@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './StartingIA_V3.css';
-import { createUserService } from '../../services/api';
+import { createUserService } from '../../services/userService';
+import { Play, Pause, Check } from 'lucide-react';
+
+// --- IMPORTS DOS ÁUDIOS ---
+// Certifique-se que os arquivos estão na pasta src/audios/
+import audioMarcio from '../../audios/Marcio.mp3';
+import audioEduardo from '../../audios/ElevenLabs_2025-12-07T19_49_30_Eduardo Monteiro - Brazilian from the Northeast of Alagoas_pvc_sp100_s65_sb75_se19_b_m2.mp3';
+import audioRocha from '../../audios/ElevenLabs_2025-12-07T19_50_43_Rocha - Podcast_pvc_sp109_s50_sb75_se0_b_m2.mp3';
+import audioJenifer from '../../audios/Jenifer.mp3';
+import audioThais from '../../audios/Thais.mp3';
+import audioRaquel from '../../audios/Raquel.mp3';
 
 const StartingIA_V3 = () => {
   const navigate = useNavigate();
@@ -9,8 +19,26 @@ const StartingIA_V3 = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // --- CONFIGURAÇÃO DAS VOZES ---
+  const VOICES = {
+    female: [
+      { id: 'PZIBrGsMjLyYasEz50bI', name: 'Jenifer', src: audioJenifer },
+      { id: '5EtawPduB139avoMLQgH', name: 'Thais N', src: audioThais },
+      { id: 'GDzHdQOi6jjf8zaXhCYD', name: 'Raquel', src: audioRaquel },
+    ],
+    male: [
+      { id: 'Zk0wRqIFBWGMu2lIk7hw', name: 'Marcio', src: audioMarcio },
+      { id: '83Nae6GFQiNslSbuzmE7', name: 'Eduardo M.', src: audioEduardo },
+      { id: 'PzTMbh7ilIswxFbjDqwL', name: 'Rocha', src: audioRocha },
+    ]
+  };
+
   // Estados do Agente
   const [gender, setGender] = useState('female');
+  const [selectedVoiceId, setSelectedVoiceId] = useState(''); // ID da voz selecionada
+  const [playingVoiceId, setPlayingVoiceId] = useState(null); // ID da voz tocando agora
+  const [audioObj, setAudioObj] = useState(null); // Objeto de áudio atual
+
   const [aiName, setAiName] = useState('');
   const [selectedTraits, setSelectedTraits] = useState([]);
   const [userNickname, setUserNickname] = useState('');
@@ -43,14 +71,46 @@ const StartingIA_V3 = () => {
   const traitsList = ['Organizado', 'Criativo', 'Bem-humorado', 'Rigoroso', 'Empático', 'Sarcástico', 'Formal', 'Motivador'];
   const TOTAL_STEPS = 5; 
 
-  const getVoiceId = (gen) => {
-    if (gen === 'female') return 'EXAVOICE_FEMALE_ID'; 
-    return 'EXAVOICE_MALE_ID';
+  // --- HANDLER DE ÁUDIO ---
+  const handlePlayAudio = (e, voice) => {
+    e.stopPropagation(); // Impede de selecionar o card ao clicar no play
+
+    // Se já estiver tocando esse áudio, pausa
+    if (playingVoiceId === voice.id) {
+      if (audioObj) {
+        audioObj.pause();
+        setPlayingVoiceId(null);
+      }
+      return;
+    }
+
+    // Se estiver tocando outro, para o anterior
+    if (audioObj) {
+      audioObj.pause();
+      audioObj.currentTime = 0;
+    }
+
+    // Toca o novo
+    const newAudio = new Audio(voice.src);
+    newAudio.play();
+    setAudioObj(newAudio);
+    setPlayingVoiceId(voice.id);
+
+    // Quando terminar, reseta o ícone
+    newAudio.onended = () => setPlayingVoiceId(null);
   };
+
+  // Limpa áudio ao desmontar ou mudar passo
+  useEffect(() => {
+    return () => {
+      if (audioObj) audioObj.pause();
+    };
+  }, [audioObj, step]);
+
 
   // --- NAVEGAÇÃO ---
   const nextStep = () => {
-    if (step === 1 && !gender) return alert("Selecione um gênero.");
+    if (step === 1 && !selectedVoiceId) return alert("Selecione uma voz para continuar.");
     if (step === 2 && !aiName) return alert("Digite um nome para a IA.");
     if (step === 3 && selectedTraits.length === 0) return alert("Selecione pelo menos uma personalidade.");
     if (step === 4 && !userNickname) return alert("Digite seu nome.");
@@ -110,7 +170,7 @@ const StartingIA_V3 = () => {
     return '👩‍💼';
   };
 
-  // --- FUNÇÃO FINAL: CRIAR USUÁRIO NA API (Com Tratamento de Erro Melhorado) ---
+  // --- FUNÇÃO FINAL: CRIAR USUÁRIO NA API ---
   const handleFinalSubmit = async () => {
     if (!email || !password) return alert("Preencha e-mail e senha.");
 
@@ -124,8 +184,10 @@ const StartingIA_V3 = () => {
       user_nickname: userNickname,
       agent_nickname: aiName,
       agent_gender: gender === 'female' ? 'Feminino' : 'Masculino',
-      agent_voice_id: getVoiceId(gender),
-      agent_personality: selectedTraits
+      agent_voice_id: selectedVoiceId, // ID REAL DA VOZ
+      agent_personality: selectedTraits,
+      email: email, // Adicionado campo de e-mail (se sua API esperar isso no payload de create)
+      password: password // Adicionado campo de senha
     };
 
     try {
@@ -137,16 +199,11 @@ const StartingIA_V3 = () => {
       
     } catch (error) {
       console.error("Erro na criação:", error);
-      
       const msg = error.message || "";
-
-      // Verifica se a mensagem contém o texto específico de duplicação
-      // A API retorna: "Já existe um usuário cadastrado com este número de telefone."
       if (msg.toLowerCase().includes("já existe um usuário") || msg.toLowerCase().includes("already exists")) {
-        alert("Ops! Já existe uma conta vinculada a este telefone. \n\nVamos te redirecionar para o Login.");
+        alert("Ops! Já existe uma conta vinculada a este telefone.");
         navigate('/login');
       } else {
-        // Erro genérico
         alert(`Erro ao criar conta: ${msg}`);
       }
     } finally {
@@ -172,17 +229,59 @@ const StartingIA_V3 = () => {
 
         <div className={`form-content ${isAnimating ? 'fade-out' : 'fade-in'}`}>
           
+          {/* PASSO 1: SELEÇÃO DE VOZ COM PREVIEW */}
           {step === 1 && (
             <div className="step-wrapper">
-              <h1 className="v3-title">Escolha a voz do seu agente.</h1>
-              <p className="v3-desc">Gênero e tom de voz para os áudios.</p>
-              <div className="v3-grid-options">
-                <button className={`option-card ${gender === 'female' ? 'active' : ''}`} onClick={() => setGender('female')}>
-                  <span className="opt-icon">👩</span> Feminina
+              <h1 className="v3-title">Escolha a voz.</h1>
+              <p className="v3-desc">Ouça e selecione o tom ideal para seu agente.</p>
+              
+              {/* Toggle Gênero */}
+              <div className="gender-toggle-container">
+                <button 
+                  className={`gender-tab ${gender === 'female' ? 'active' : ''}`} 
+                  onClick={() => setGender('female')}
+                >
+                  👩 Feminina
                 </button>
-                <button className={`option-card ${gender === 'male' ? 'active' : ''}`} onClick={() => setGender('male')}>
-                  <span className="opt-icon">👨</span> Masculina
+                <button 
+                  className={`gender-tab ${gender === 'male' ? 'active' : ''}`} 
+                  onClick={() => setGender('male')}
+                >
+                  👨 Masculina
                 </button>
+              </div>
+
+              {/* Lista de Vozes */}
+              <div className="voice-list">
+                {VOICES[gender].map((voice) => (
+                  <div 
+                    key={voice.id}
+                    className={`voice-card ${selectedVoiceId === voice.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedVoiceId(voice.id)}
+                  >
+                    <div className="voice-info">
+                      <div className="voice-icon-circle">
+                        {gender === 'female' ? '👩' : '👨'}
+                      </div>
+                      <span className="voice-name">{voice.name}</span>
+                    </div>
+
+                    <div className="voice-actions">
+                      {/* Botão de Play */}
+                      <button 
+                        className={`btn-audio-preview ${playingVoiceId === voice.id ? 'playing' : ''}`}
+                        onClick={(e) => handlePlayAudio(e, voice)}
+                      >
+                        {playingVoiceId === voice.id ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                      </button>
+                      
+                      {/* Check de Seleção */}
+                      <div className="selection-radio">
+                        {selectedVoiceId === voice.id && <div className="radio-inner" />}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

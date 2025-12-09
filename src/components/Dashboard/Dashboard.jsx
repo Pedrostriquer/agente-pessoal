@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import { 
   Plus, Trash2, CheckCircle2, Circle, Calendar as CalendarIcon, 
@@ -7,67 +7,46 @@ import {
   BookOpen, AlertCircle, Lightbulb, Menu, X
 } from 'lucide-react';
 
-// Adicionei isSidebarOpen nas props para controlar a margem
+// Importando Serviços
+import { getFinanceReport } from '../../services/financeService';
+import { getMarketList, addMarketItem, removeMarketItem } from '../../services/marketService';
+import { getIdeasList, addIdea, removeIdea } from '../../services/ideasService';
+import { getGoalsList } from '../../services/goalsService';
+import { getCalendarEvents } from '../../services/calendarService';
+
 const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
   
-  // --- ESTADOS ---
-  const [selectedDate, setSelectedDate] = useState(6);
+  // --- ESTADOS DINÂMICOS (API) ---
+  const [financeSummary, setFinanceSummary] = useState({ balance: 0 });
+  const [marketList, setMarketList] = useState([]);
+  const [ideasList, setIdeasList] = useState([]);
+  const [goalsList, setGoalsList] = useState([]);
+  const [agendaEvents, setAgendaEvents] = useState([]);
+  
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 1. TO-DO
+  // --- ESTADOS DE INTERFACE ---
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Objeto Date real
+  
+  // Inputs para Adicionar Rápido
+  const [newMarketItem, setNewMarketItem] = useState('');
+  const [newIdeaItem, setNewIdeaItem] = useState('');
+
+  // --- ESTADOS ESTÁTICOS ---
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Finalizar Protótipo', done: false },
     { id: 2, title: 'Pagar Internet', done: true },
     { id: 3, title: 'Agendar Médico', done: false },
-    { id: 4, title: 'Responder E-mails', done: false },
-    { id: 5, title: 'Limpar Escritório', done: false },
   ]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
-  // 2. MERCADO
-  const [marketList, setMarketList] = useState([
-    { id: 1, text: 'Leite', done: false },
-    { id: 2, text: 'Café', done: true },
-    { id: 3, text: 'Ovos', done: false },
-    { id: 4, text: 'Detergente', done: false },
-  ]);
-  const [newMarketItem, setNewMarketItem] = useState('');
-
-  // 3. IDEIAS
-  const [ideas, setIdeas] = useState([
-    { id: 1, text: 'Canal no YouTube sobre Tech' },
-    { id: 2, text: 'Investir em Fundos Imobiliários' },
-    { id: 3, text: 'Aprender Python' },
-  ]);
-  const [newIdea, setNewIdea] = useState('');
-
-  // 4. PLANEJAMENTO (Sem input de add)
-  const [plans, setPlans] = useState([
-    { 
-      id: 1, title: 'Viagem Irlanda 🇮🇪', progress: 45, 
-      steps: [
-        { id: 101, text: 'Tirar Passaporte', done: true },
-        { id: 102, text: 'Comprar Euro', done: false },
-      ]
-    },
-    { 
-      id: 2, title: 'Setup Novo', progress: 20, 
-      steps: [
-        { id: 201, text: 'Comprar Cadeira', done: false },
-        { id: 202, text: 'Pintar Paredes', done: true },
-      ]
-    },
-  ]);
-  const [expandedPlanId, setExpandedPlanId] = useState(null);
-
-  // 5. ESTUDOS
-  const [subjects, setSubjects] = useState([
+  const [subjects] = useState([
     { 
       id: 1, name: 'Cálculo II', grade: '4.5', 
       infos: [
         { icon: <Clock size={14}/>, text: 'Seg/Qua 19:00' },
         { icon: <MapPin size={14}/>, text: 'Sala 304 - B' },
         { icon: <AlertCircle size={14}/>, text: 'Prova: 12/12' },
-        { icon: <DownloadCloud size={14}/>, text: 'Resumo_Limites.pdf', isLink: true }
       ],
       tasks: ['Lista 04', 'Revisar Integrais']
     },
@@ -76,64 +55,132 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
       infos: [
         { icon: <Clock size={14}/>, text: 'Ter/Qui 21:00' },
         { icon: <MapPin size={14}/>, text: 'Lab 02' },
-        { icon: <AlertCircle size={14}/>, text: 'Prova: 15/12' },
-        { icon: <DownloadCloud size={14}/>, text: 'UML_Diagrams.pdf', isLink: true }
       ],
-      tasks: ['Diagrama de Classes', 'Caso de Uso']
+      tasks: ['Diagrama de Classes']
     }
   ]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(1);
+  const activeSubject = subjects.find(s => s.id === selectedSubjectId);
+  const [expandedGoalId, setExpandedGoalId] = useState(null);
 
-  // --- HANDLERS ---
+  // --- FETCH DATA ---
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      const [finData, mktData, ideaData, goalsData, calendarData] = await Promise.all([
+        getFinanceReport(),
+        getMarketList(),
+        getIdeasList(),
+        getGoalsList(),
+        getCalendarEvents()
+      ]);
+
+      setFinanceSummary({ balance: finData.saldo_atual_conta || 0 });
+      setMarketList(Array.isArray(mktData) ? mktData : mktData.items || []);
+      setIdeasList(Array.isArray(ideaData) ? ideaData : ideaData.ideas || []);
+      setGoalsList(Array.isArray(goalsData) ? goalsData : goalsData.goals || []);
+      setAgendaEvents(Array.isArray(calendarData) ? calendarData : calendarData.events || []);
+
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- HANDLERS (Mercado e Ideias) ---
+  const handleAddMarket = async () => {
+    if (!newMarketItem) return;
+    try {
+      await addMarketItem(newMarketItem, 1);
+      setNewMarketItem('');
+      const data = await getMarketList();
+      setMarketList(Array.isArray(data) ? data : data.items || []);
+    } catch (e) { alert('Erro ao adicionar'); }
+  };
+
+  const handleRemoveMarket = async (id) => {
+    try { await removeMarketItem(id); setMarketList(prev => prev.filter(i => (i.id || i._id) !== id)); } catch (e) {}
+  };
+
+  const handleAddIdea = async () => {
+    if (!newIdeaItem) return;
+    try {
+      await addIdea(newIdeaItem);
+      setNewIdeaItem('');
+      const data = await getIdeasList();
+      setIdeasList(Array.isArray(data) ? data : data.ideas || []);
+    } catch (e) { alert('Erro ao adicionar'); }
+  };
+
+  const handleRemoveIdea = async (id) => {
+    try { await removeIdea(id); setIdeasList(prev => prev.filter(i => (i.id || i._id) !== id)); } catch (e) {}
+  };
+
+  // Handlers Estáticos
   const addTask = () => {
     if(!newTaskTitle) return;
     setTasks([...tasks, {id: Date.now(), title: newTaskTitle, done: false}]);
     setNewTaskTitle('');
   };
   const toggleTask = (id) => setTasks(tasks.map(t => t.id === id ? {...t, done: !t.done} : t));
+  const toggleGoal = (id) => setExpandedGoalId(expandedGoalId === id ? null : id);
 
-  const addMarket = () => {
-    if(!newMarketItem) return;
-    setMarketList([...marketList, {id: Date.now(), text: newMarketItem, done: false}]);
-    setNewMarketItem('');
+  // --- LOGICA DO CALENDARIO ---
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  
+  const currentYear = selectedDate.getFullYear();
+  const currentMonth = selectedDate.getMonth();
+  const daysCount = getDaysInMonth(currentYear, currentMonth);
+  const daysArray = Array.from({length: daysCount}, (_, i) => i + 1);
+
+  // Filtra eventos do dia SELECIONADO
+  const selectedEvents = agendaEvents.filter(evt => {
+    const evtDate = new Date(evt.start);
+    return evtDate.getDate() === selectedDate.getDate() &&
+           evtDate.getMonth() === selectedDate.getMonth() &&
+           evtDate.getFullYear() === selectedDate.getFullYear();
+  });
+
+  // Filtra eventos do MÊS ATUAL
+  const monthEventsCount = agendaEvents.filter(evt => {
+    const evtDate = new Date(evt.start);
+    return evtDate.getMonth() === currentMonth && evtDate.getFullYear() === currentYear;
+  }).length;
+
+  // Verifica se um dia específico tem eventos (para as bolinhas)
+  const hasEventOnDay = (day) => {
+    return agendaEvents.some(evt => {
+      const evtDate = new Date(evt.start);
+      return evtDate.getDate() === day && 
+             evtDate.getMonth() === currentMonth && 
+             evtDate.getFullYear() === currentYear;
+    });
   };
-  const toggleMarket = (id) => setMarketList(marketList.map(m => m.id === id ? {...m, done: !m.done} : m));
 
-  const addIdea = () => {
-    if(!newIdea) return;
-    setIdeas([...ideas, {id: Date.now(), text: newIdea}]);
-    setNewIdea('');
-  };
-  const removeIdea = (id) => setIdeas(ideas.filter(i => i.id !== id));
-
-  const togglePlan = (id) => setExpandedPlanId(expandedPlanId === id ? null : id);
-  const toggleStep = (planId, stepId) => {
-    setPlans(plans.map(p => {
-      if(p.id !== planId) return p;
-      return { ...p, steps: p.steps.map(s => s.id === stepId ? {...s, done: !s.done} : s) }
-    }));
+  const formatTime = (isoString) => {
+    if (!isoString) return '--:--';
+    return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const activeSubject = subjects.find(s => s.id === selectedSubjectId);
+  const formatCurrency = (val) => Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  // Mini Calendar render
-  const renderMiniCalendar = () => {
-    return Array.from({length: 31}, (_, i) => i + 1).map(day => (
-      <div 
-        key={day} 
-        className={`cal-day-mini ${day === selectedDate ? 'active' : ''}`}
-        onClick={() => setSelectedDate(day)}
-      >
-        {day}
-      </div>
-    ));
-  };
+  // --- COMPONENTE LOADING (Skeleton) ---
+  const SkeletonLine = () => <div className="skeleton-line"></div>;
+  const LoadingCard = () => (
+    <div className="skeleton-wrapper">
+      <div className="skeleton-header"></div>
+      <div className="skeleton-body"></div>
+      <div className="skeleton-body"></div>
+    </div>
+  );
 
   return (
-    // Adicionei as classes condicionais aqui para ajustar a margem
     <div className={`dsh-wrapper fade-in ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       
-      {/* HEADER */}
       <header className="dsh-header">
         <div className="header-left">
           <button className="menu-btn-mobile" onClick={toggleSidebar}>
@@ -145,61 +192,100 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
           </div>
         </div>
         <div className="dsh-date">
-          <CalendarIcon size={16} /> 06/12/2025
+          <CalendarIcon size={16} /> {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </div>
       </header>
 
-      {/* --- GRID LAYOUT ESTRUTURADO --- */}
       <div className="dsh-grid-container">
 
-        {/* 1. AGENDA (TOPO ESQUERDA) */}
+        {/* 1. AGENDA (Atualizada) */}
         <div className="dsh-card area-agenda">
           <div className="card-header">
-             <h3><CalendarIcon size={16}/> Agenda Hoje</h3>
+             <h3><CalendarIcon size={16}/> Agenda (Google)</h3>
           </div>
-          <div className="agenda-layout">
-            <div className="agenda-items">
-              <div className="agenda-row urgent">
-                <span className="time">14:00</span>
-                <span>Reunião Investidores</span>
+          
+          {isLoading ? <LoadingCard /> : (
+            <div className="agenda-layout">
+              {/* Lado Esquerdo: Calendário Grid */}
+              <div className="calendar-grid-wrapper">
+                <div className="month-label-row">
+                  <span className="month-name">
+                    {selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  </span>
+                  <span className="month-count-badge">
+                    {monthEventsCount} eventos
+                  </span>
+                </div>
+                
+                <div className="days-grid">
+                  {daysArray.map(day => {
+                    const hasEvent = hasEventOnDay(day);
+                    const isSelected = selectedDate.getDate() === day;
+                    return (
+                      <div 
+                        key={day} 
+                        className={`cal-day-cell ${isSelected ? 'active' : ''} ${hasEvent ? 'has-event' : ''}`}
+                        onClick={() => setSelectedDate(new Date(currentYear, currentMonth, day))}
+                      >
+                        {day}
+                        {hasEvent && <div className="event-dot"></div>}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="agenda-row normal">
-                <span className="time">16:30</span>
-                <span>Dentista</span>
-              </div>
-              <div className="agenda-row">
-                <span className="time">20:00</span>
-                <span>Jantar</span>
+
+              {/* Lado Direito: Lista do Dia */}
+              <div className="day-events-list">
+                <h4 className="day-title-sticky">
+                  Dia {selectedDate.getDate()}
+                  <span className="day-count-small">({selectedEvents.length})</span>
+                </h4>
+                <div className="events-scroll">
+                  {selectedEvents.length === 0 ? (
+                    <p className="no-events-text">Nada marcado.</p>
+                  ) : (
+                    selectedEvents.map((evt, idx) => (
+                      <div key={idx} className="agenda-row compact">
+                        <div className="time-col">
+                          {formatTime(evt.start)}
+                        </div>
+                        <div className="info-col">
+                          <span className="evt-summary">{evt.summary}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-            <div className="mini-calendar-grid">
-              {renderMiniCalendar()}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* 2. FINANÇAS (TOPO DIREITA - AGORA EM CIMA) */}
+        {/* 2. FINANÇAS */}
         <div className="dsh-card area-finance">
            <div className="card-header">
              <h3><Wallet size={16} color="#10b981"/> Finanças</h3>
            </div>
-           <div className="fin-content">
-              <div className="fin-big-val">
-                <small>Saldo Total</small>
-                <h2>R$ 7.450,00</h2>
-              </div>
-              <div className="fin-mini-list">
-                 <div className="mini-trans"><TrendingDown size={14} color="#ef4444"/> Uber - R$ 24,90</div>
-                 <div className="mini-trans"><TrendingUp size={14} color="#10b981"/> Pix + R$ 150,00</div>
-                 <div className="mini-trans"><TrendingDown size={14} color="#ef4444"/> Spotify - R$ 21,90</div>
-              </div>
-           </div>
+           {isLoading ? <LoadingCard /> : (
+             <div className="fin-content">
+                <div className="fin-big-val">
+                  <small>Saldo Total</small>
+                  <h2>{formatCurrency(financeSummary.balance)}</h2>
+                </div>
+                <div className="fin-mini-list">
+                   <div className="mini-trans"><TrendingDown size={14} color="#ef4444"/> Uber - R$ 24,90</div>
+                   <div className="mini-trans"><TrendingUp size={14} color="#10b981"/> Pix + R$ 150,00</div>
+                   <div className="mini-trans"><TrendingDown size={14} color="#ef4444"/> Spotify - R$ 21,90</div>
+                </div>
+             </div>
+           )}
         </div>
 
-        {/* 3. TO-DO LIST (MEIO ESQUERDA) */}
+        {/* 3. TO-DO LIST */}
         <div className="dsh-card area-todo">
           <div className="card-header">
-            <h3>To-Do List</h3>
+            <h3>To-Do (Local)</h3>
             <span className="badge">{tasks.filter(t => !t.done).length}</span>
           </div>
           <div className="input-row-clean">
@@ -223,33 +309,47 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
           </div>
         </div>
 
-        {/* 4. MERCADO (MEIO CENTRO) */}
+        {/* 4. MERCADO */}
         <div className="dsh-card area-market">
           <div className="card-header">
              <h3><ShoppingCart size={16} color="#10b981"/> Mercado</h3>
           </div>
           <div className="input-row-clean">
              <input 
-               placeholder="Item..." 
+               placeholder="Comprar..." 
                value={newMarketItem}
                onChange={e => setNewMarketItem(e.target.value)}
-               onKeyDown={e => e.key === 'Enter' && addMarket()}
+               onKeyDown={e => e.key === 'Enter' && handleAddMarket()}
              />
-             <button onClick={addMarket}><Plus size={18}/></button>
+             <button onClick={handleAddMarket}><Plus size={18}/></button>
           </div>
-          <div className="list-scroll">
-             {marketList.map(item => (
-               <div key={item.id} className="item-row" onClick={() => toggleMarket(item.id)}>
-                  <div className={`checkbox-sq ${item.done ? 'checked' : ''}`}>
-                    {item.done && <CheckCircle2 size={14} color="white"/>}
-                  </div>
-                  <span className={item.done ? 'risked' : ''}>{item.text}</span>
-               </div>
-             ))}
-          </div>
+          {isLoading ? <SkeletonLine /> : (
+            <div className="list-scroll">
+               {marketList.length === 0 && <p className="empty-text-small">Lista vazia</p>}
+               {marketList.map((item, idx) => {
+                 const itemId = item.id || item._id;
+                 return (
+                   <div key={itemId || idx} className="item-row">
+                      <div className={`checkbox-sq ${item.checked ? 'checked' : ''}`}>
+                        {item.checked && <CheckCircle2 size={14} color="white"/>}
+                      </div>
+                      <span className={item.checked ? 'risked' : ''} style={{flex:1}}>
+                        <span style={{color: '#10b981', fontWeight: 'bold', marginRight: '5px'}}>
+                          {item.quantity || 1}x
+                        </span>
+                        {item.item_name}
+                      </span>
+                      <button className="icon-btn-small" onClick={() => handleRemoveMarket(itemId)}>
+                        <Trash2 size={14}/>
+                      </button>
+                   </div>
+                 )
+               })}
+            </div>
+          )}
         </div>
 
-        {/* 5. IDEIAS (MEIO DIREITA) */}
+        {/* 5. IDEIAS */}
         <div className="dsh-card area-ideas">
            <div className="card-header">
               <h3><Lightbulb size={16} color="#f59e0b"/> Ideias</h3>
@@ -257,30 +357,36 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
            <div className="input-row-clean">
              <input 
                placeholder="Nova ideia..." 
-               value={newIdea}
-               onChange={e => setNewIdea(e.target.value)}
-               onKeyDown={e => e.key === 'Enter' && addIdea()}
+               value={newIdeaItem}
+               onChange={e => setNewIdeaItem(e.target.value)}
+               onKeyDown={e => e.key === 'Enter' && handleAddIdea()}
              />
-             <button onClick={addIdea}><Plus size={18}/></button>
+             <button onClick={handleAddIdea}><Plus size={18}/></button>
           </div>
-          <div className="list-scroll">
-             {ideas.map(idea => (
-               <div key={idea.id} className="idea-row-simple">
-                 <span>{idea.text}</span>
-                 <button onClick={() => removeIdea(idea.id)}><Trash2 size={14}/></button>
-               </div>
-             ))}
-          </div>
+           {isLoading ? <SkeletonLine /> : (
+             <div className="list-scroll">
+               {ideasList.length === 0 && <p className="empty-text-small">Nenhuma ideia</p>}
+               {ideasList.map((idea, idx) => {
+                 const itemId = idea.id || idea._id;
+                 return (
+                   <div key={itemId || idx} className="idea-row-simple">
+                     <span>{idea.idea_content || idea.content}</span>
+                     <button className="icon-btn-small" onClick={() => handleRemoveIdea(itemId)}>
+                        <Trash2 size={14}/>
+                      </button>
+                   </div>
+                 )
+               })}
+            </div>
+           )}
         </div>
 
-        {/* 6. ESTUDOS (BAIXO ESQUERDA - SPAN 2) */}
+        {/* 6. ESTUDOS */}
         <div className="dsh-card area-study">
            <div className="card-header">
-             <h3><BookOpen size={16}/> Faculdade</h3>
+             <h3><BookOpen size={16}/> Faculdade (Local)</h3>
            </div>
-           
            <div className="study-container">
-             {/* Abas */}
              <div className="study-tabs">
                {subjects.map(sub => (
                  <button 
@@ -292,32 +398,23 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
                  </button>
                ))}
              </div>
-
-             {/* Conteúdo em Listas Simples */}
              <div className="study-content-cols">
                 <div className="study-col">
-                   <h4 className="col-title">Informações</h4>
+                   <h4 className="col-title">Infos</h4>
                    <div className="simple-list">
                       {activeSubject.infos.map((info, idx) => (
                         <div key={idx} className="simple-list-item">
-                           {info.icon}
-                           {info.isLink ? (
-                             <a href="#" className="link-text">{info.text}</a>
-                           ) : (
-                             <span>{info.text}</span>
-                           )}
+                           {info.icon} <span>{info.text}</span>
                         </div>
                       ))}
                    </div>
                 </div>
-
                 <div className="study-col">
-                   <h4 className="col-title">Tarefas Pendentes</h4>
+                   <h4 className="col-title">Tarefas</h4>
                    <div className="simple-list">
                       {activeSubject.tasks.map((t, idx) => (
                         <div key={idx} className="simple-list-item">
-                           <Circle size={14} color="#cbd5e1"/>
-                           <span>{t}</span>
+                           <Circle size={14} color="#cbd5e1"/> <span>{t}</span>
                         </div>
                       ))}
                    </div>
@@ -326,37 +423,44 @@ const Dashboard = ({ toggleSidebar, isSidebarOpen }) => {
            </div>
         </div>
 
-        {/* 7. PLANEJAMENTO (BAIXO DIREITA) */}
+        {/* 7. METAS */}
         <div className="dsh-card area-plans">
            <div className="card-header">
-              <h3>Planejamento</h3>
+              <h3>Metas</h3>
            </div>
-           <div className="plans-scroll">
-              {plans.map(plan => {
-                const isOpen = expandedPlanId === plan.id;
-                return (
-                  <div key={plan.id} className={`plan-block ${isOpen ? 'open' : ''}`}>
-                     <div className="plan-header" onClick={() => togglePlan(plan.id)}>
-                        <div className="plan-meta">
-                          <strong>{plan.title}</strong>
-                          <div className="progress-track"><div className="progress-fill" style={{width: `${plan.progress}%`}}></div></div>
-                        </div>
-                        {isOpen ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
-                     </div>
-                     {isOpen && (
-                       <div className="plan-steps-list">
-                          {plan.steps.map(step => (
-                            <div key={step.id} className="plan-step-item" onClick={() => toggleStep(plan.id, step.id)}>
-                               <div className={`step-check ${step.done ? 'checked' : ''}`}></div>
-                               <span>{step.text}</span>
+           {isLoading ? <LoadingCard /> : (
+             <div className="plans-scroll">
+                {goalsList.length === 0 ? (
+                  <p className="empty-text-small">Sem metas ativas.</p>
+                ) : (
+                  goalsList.map(goal => {
+                    const isOpen = expandedGoalId === goal.id;
+                    const current = Number(goal.current_progress || 0);
+                    const target = Number(goal.target_amount || 1);
+                    const percent = Math.min(100, Math.round((current / target) * 100));
+                    const unit = goal.metric_unit || 'R$';
+
+                    return (
+                      <div key={goal.id} className={`plan-block ${isOpen ? 'open' : ''}`}>
+                         <div className="plan-header" onClick={() => toggleGoal(goal.id)}>
+                            <div className="plan-meta" style={{width: '100%'}}>
+                              <div style={{display:'flex', justifyContent:'space-between', marginBottom: '4px'}}>
+                                  <strong>{goal.goal_name}</strong>
+                                  <span style={{fontSize: '11px', fontWeight: 'bold', color: '#10b981'}}>
+                                    {current} / {target} {unit}
+                                  </span>
+                              </div>
+                              <div className="progress-track" style={{width: '100%'}}>
+                                  <div className="progress-fill" style={{width: `${percent}%`}}></div>
+                              </div>
                             </div>
-                          ))}
-                       </div>
-                     )}
-                  </div>
-                )
-              })}
-           </div>
+                         </div>
+                      </div>
+                    )
+                  })
+                )}
+             </div>
+           )}
         </div>
 
       </div>

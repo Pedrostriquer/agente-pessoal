@@ -50,7 +50,7 @@
 
 /* --- PAINEL DIREITO (FORMULÁRIO) --- */
 .login-form-panel {
-  flex: 1.2; /* Um pouco maior que o painel esquerdo */
+  flex: 1.2;
   background: white;
   display: flex;
   align-items: center;
@@ -89,33 +89,65 @@ form {
 
 .input-group {
   position: relative;
+  display: flex; 
+  align-items: center;
 }
 
-.input-icon {
+/* Ícone da esquerda (Mail/Lock) */
+.input-icon.left {
   position: absolute;
   left: 18px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  z-index: 10; 
+  pointer-events: none;
 }
 
-.input-group input {
+/* Input Field (E-mail e Senha) - CORREÇÃO DE PADDING */
+.input-field {
   width: 100%;
-  padding: 16px 16px 16px 50px; /* Espaço para o ícone */
+  /* Aumentado o padding para 55px para dar mais espaço que o ícone (18px + 20px) */
+  padding: 16px 16px 16px 55px; 
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
+  border: 1px solid #d1d5db; 
+  background-color: #ffffff; 
   font-size: 16px;
   color: #0f172a;
   transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box; /* Garante que o padding não quebre o layout */
+  box-sizing: border-box;
 }
 
-.input-group input:focus {
+/* Garante espaço no input de senha para o botão de toggle */
+.input-field.password { 
+  padding-right: 50px; 
+}
+
+.input-field:focus {
   outline: none;
   border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 1px #10b981;
 }
+
+/* Botão de Ver Senha (Direita) */
+.btn-toggle-password {
+  position: absolute; 
+  right: 15px; 
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent; 
+  border: none;
+  color: #94a3b8; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center;
+  padding: 5px; 
+  border-radius: 50%; 
+  transition: 0.2s;
+}
+.btn-toggle-password:hover { color: #0f172a; background: #e2e8f0; }
+
 
 .form-helpers {
   display: flex;
@@ -143,24 +175,18 @@ form {
 
 /* Botão de Login */
 .btn-login {
-  width: 100%;
-  padding: 18px;
-  background: #10b981;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-  transition: all 0.2s;
+  width: 100%; padding: 16px; background: #10b981; color: white;
+  border: none; border-radius: 12px; font-size: 16px; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center;
 }
+.btn-login:hover:not(:disabled) { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3); }
+.btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
 
-.btn-login:hover {
-  background: #059669;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
-}
+.flex-center { display: flex; align-items: center; gap: 10px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 
 .form-footer {
   text-align: center;
@@ -178,10 +204,10 @@ form {
 /* RESPONSIVIDADE */
 @media (max-width: 768px) {
   .login-branding-panel {
-    display: none; /* Esconde o painel esquerdo no mobile */
+    display: none;
   }
   
   .login-form-panel {
-    flex: 1; /* Ocupa a tela toda */
+    flex: 1;
   }
 }

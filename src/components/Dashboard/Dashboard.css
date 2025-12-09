@@ -1,65 +1,41 @@
 /* --- CONFIG GERAL --- */
 .dsh-wrapper {
-  /* Transição suave para Sidebar */
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s ease;
   min-height: 100vh;
   padding: 30px;
-  background-color: #f8fafc;
+  background-color: var(--bg-body);
   box-sizing: border-box;
   font-family: 'Outfit', sans-serif;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
-/* Margem dinâmica baseada na Sidebar */
-.dsh-wrapper.sidebar-open {
-  margin-left: 280px;
-  width: calc(100% - 280px);
-}
-
-.dsh-wrapper.sidebar-closed {
-  margin-left: 80px; /* Sidebar recolhida */
-  width: calc(100% - 80px);
-}
+.dsh-wrapper.sidebar-open { margin-left: 280px; width: calc(100% - 280px); }
+.dsh-wrapper.sidebar-closed { margin-left: 80px; width: calc(100% - 80px); }
 
 *:focus { outline: none; }
 
 /* HEADER */
-.dsh-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 25px;
-}
+.dsh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .header-left { display: flex; align-items: center; gap: 15px; }
+.dsh-header h1 { font-size: 24px; font-weight: 800; margin: 0; }
+.dsh-header p { margin: 2px 0 0 0; color: var(--text-sub); font-size: 13px; }
+.dsh-date {
+  background: var(--bg-card); padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border-color); color: var(--text-sub); font-weight: 600;
+  display: flex; align-items: center; gap: 6px; font-size: 12px; text-transform: capitalize;
+}
 
 .menu-btn-mobile { 
-  display: none; /* Desktop esconde */
-  background: transparent; 
-  border: none; 
-  cursor: pointer; 
-  padding: 4px;
-  border-radius: 4px;
-  
-  /* Garante cor e alinhamento */
-  color: #0f172a; 
-  align-items: center;
-  justify-content: center;
+  display: none; background: transparent; border: none; cursor: pointer; 
+  padding: 4px; border-radius: 4px; color: var(--text-main); 
 }
 
-.menu-btn-mobile:active {
-  background-color: #e2e8f0;
-}
-.dsh-header h1 { font-size: 24px; font-weight: 800; margin: 0; }
-.dsh-header p { margin: 2px 0 0 0; color: #64748b; font-size: 13px; }
-.dsh-date {
-  background: white; padding: 8px 12px; border-radius: 8px;
-  border: 1px solid #e2e8f0; color: #475569; font-weight: 600;
-  display: flex; align-items: center; gap: 6px; font-size: 12px;
-}
-
-/* --- GRID LAYOUT ALINHADO --- */
+/* --- GRID LAYOUT --- */
 .dsh-grid-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr; /* 3 Colunas iguais */
-  grid-template-rows: 240px 320px 240px; /* Alturas fixas para alinhamento */
+  grid-template-columns: 1.8fr 1fr 1fr; /* Agenda um pouco mais larga, resto igual */
+  /* Ajustei a altura da primeira linha para 260px (mais compacto, como antes) */
+  grid-template-rows: 260px 320px 240px; 
   gap: 20px;
   grid-template-areas: 
     "agenda agenda finance"
@@ -67,7 +43,6 @@
     "study study plans";
 }
 
-/* Áreas */
 .area-agenda  { grid-area: agenda; }
 .area-finance { grid-area: finance; }
 .area-todo    { grid-area: todo; }
@@ -78,120 +53,172 @@
 
 /* BASE DO CARD */
 .dsh-card {
-  background: white; border-radius: 16px; border: 1px solid #e2e8f0;
+  background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-color);
   padding: 20px; display: flex; flex-direction: column;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.01);
-  overflow: hidden; /* Garante que scroll interno funcione */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.01); overflow: hidden;
 }
-.card-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 12px; flex-shrink: 0;
-}
-.card-header h3 { font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: #334155; }
-.badge { background: #f1f5f9; color: #64748b; font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-shrink: 0; }
+.card-header h3 { font-size: 14px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
+.badge { background: var(--bg-hover); color: var(--text-sub); font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
 
-/* INPUTS CLEAN (BRANCO E CINZA) */
-.input-row-clean { display: flex; gap: 8px; margin-bottom: 10px; flex-shrink: 0; }
+/* --- AGENDA (AJUSTADA) --- */
+.agenda-layout { 
+  display: grid; 
+  grid-template-columns: 1.5fr 1fr; /* Proporção ajustada */
+  gap: 15px; 
+  height: 100%; 
+  overflow: hidden; 
+}
+
+/* Calendário Esquerdo */
+.calendar-grid-wrapper { display: flex; flex-direction: column; height: 100%; }
+
+.month-label-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; /* Reduzi margem */
+}
+.month-name { 
+  font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--accent-color); 
+}
+.month-count-badge {
+  font-size: 10px; background: var(--bg-hover); padding: 2px 6px; 
+  border-radius: 8px; color: var(--text-sub); font-weight: 600;
+}
+
+.days-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); 
+  gap: 4px; /* Gap menor para caber melhor */
+  align-content: start;
+}
+
+/* Célula do Dia */
+.cal-day-cell {
+  /* Removi aspect-ratio fixo para evitar distorção */
+  height: 28px; /* Altura fixa menor */
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--bg-body); 
+  border-radius: 6px; /* Raio menor para não virar bola */
+  cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--text-sub);
+  position: relative; transition: 0.2s; border: 1px solid transparent;
+}
+.cal-day-cell:hover { background: var(--bg-hover); border-color: var(--border-color); }
+
+.cal-day-cell.active { 
+  background: var(--accent-color); color: white; border-color: var(--accent-color);
+}
+.cal-day-cell.has-event {
+  font-weight: 800; color: var(--text-main);
+  background: var(--bg-card); border-color: var(--border-color);
+}
+.cal-day-cell.active.has-event {
+  background: var(--accent-color); color: white;
+}
+
+/* Bolinha */
+.event-dot {
+  width: 4px; height: 4px; background: var(--accent-color);
+  border-radius: 50%; 
+  position: absolute; bottom: 2px; /* Bem embaixo */
+}
+.cal-day-cell.active .event-dot { background: white; }
+
+/* Lista Direita */
+.day-events-list { 
+  display: flex; flex-direction: column; height: 100%; 
+  border-left: 1px solid var(--border-color); padding-left: 15px; 
+}
+.day-title-sticky {
+  font-size: 11px; text-transform: uppercase; color: var(--text-sub); 
+  margin: 0 0 10px 0; font-weight: 700; display: flex; justify-content: space-between;
+}
+.day-count-small { color: var(--accent-color); }
+
+.events-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 5px; padding-right: 2px; }
+
+.agenda-row.compact {
+  display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; 
+  background: var(--bg-hover); font-size: 10px; align-items: center;
+  border-left: 2px solid var(--accent-color);
+  min-height: 24px;
+}
+.agenda-row.compact .time-col { font-weight: 700; color: var(--text-main); min-width: 32px; }
+.agenda-row.compact .info-col { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-sub); }
+.no-events-text { font-size: 11px; color: var(--text-sub); font-style: italic; text-align: center; margin-top: 20px; }
+
+/* --- FINANÇAS --- */
+.fin-content { display: flex; flex-direction: column; height: 100%; justify-content: center; gap: 10px; }
+.fin-big-val { text-align: center; margin-bottom: 5px; } /* Reduzi margem */
+.fin-big-val small { text-transform: uppercase; font-size: 10px; font-weight: 700; color: var(--text-sub); }
+.fin-big-val h2 { font-size: 26px; margin: 0; color: var(--text-main); } /* Fonte um pouco menor */
+.fin-mini-list { display: flex; flex-direction: column; gap: 6px; padding: 0 5px; }
+.mini-trans { font-size: 11px; display: flex; align-items: center; gap: 8px; color: var(--text-sub); }
+
+/* --- INPUTS CLEAN --- */
+.input-row-clean { display: flex; gap: 6px; margin-bottom: 10px; flex-shrink: 0; }
 .input-row-clean input {
   flex: 1; padding: 8px 10px; border-radius: 8px; 
-  border: 1px solid #e2e8f0; background: white; 
-  color: #334155; font-size: 12px;
+  border: 1px solid var(--border-color); background: var(--bg-body); 
+  color: var(--text-main); font-size: 12px;
 }
-.input-row-clean input:focus { border-color: #10b981; }
+.input-row-clean input:focus { border-color: var(--accent-color); }
 .input-row-clean button {
-  width: 32px; background: #f1f5f9; color: #10b981; border: 1px solid #e2e8f0;
+  width: 30px; background: var(--bg-hover); color: var(--accent-color); border: 1px solid var(--border-color);
   border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: 0.2s;
 }
-.input-row-clean button:hover { background: #10b981; color: white; border-color: #10b981; }
+.input-row-clean button:hover { background: var(--accent-color); color: white; border-color: var(--accent-color); }
 
-/* 1. AGENDA (TOPO) */
-.agenda-layout { display: flex; gap: 20px; height: 100%; overflow: hidden; }
-.agenda-items { flex: 1; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
-.agenda-row { display: flex; gap: 10px; padding: 8px; border-radius: 6px; background: #f8fafc; font-size: 12px; align-items: center; }
-.agenda-row.urgent { background: #fef2f2; border-left: 3px solid #ef4444; }
-.agenda-row.normal { background: #f0fdf4; border-left: 3px solid #10b981; }
-.agenda-row .time { font-weight: 700; color: #64748b; width: 40px; }
+.icon-btn-small { background: transparent; border: none; color: var(--text-sub); cursor: pointer; padding: 4px; opacity: 0; transition: 0.2s; }
+.item-row:hover .icon-btn-small, .idea-row-simple:hover .icon-btn-small { opacity: 1; }
+.icon-btn-small:hover { color: #ef4444; }
 
-.mini-calendar-grid { 
-  width: 200px; display: grid; grid-template-columns: repeat(7, 1fr); 
-  gap: 2px; align-content: flex-start;
-}
-.cal-day-mini { 
-  height: 24px; display: flex; align-items: center; justify-content: center; 
-  font-size: 11px; color: #64748b; border-radius: 4px; cursor: pointer; 
-}
-.cal-day-mini:hover { background: #f1f5f9; }
-.cal-day-mini.active { background: #0f172a; color: white; font-weight: 700; }
+/* LISTAS */
+.list-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.item-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.item-row:hover { background: var(--bg-hover); }
+.check-circle { width: 16px; height: 16px; border: 1px solid #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.check-circle.checked { background: var(--accent-color); border-color: var(--accent-color); }
+.risked { text-decoration: line-through; color: var(--text-sub); }
+.checkbox-sq { width: 14px; height: 14px; border: 1px solid #cbd5e1; border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.checkbox-sq.checked { background: var(--accent-color); border-color: var(--accent-color); }
+.empty-text-small { font-size: 11px; color: var(--text-sub); text-align: center; margin-top: 10px; }
 
-/* 2. FINANÇAS */
-.fin-content { display: flex; flex-direction: column; height: 100%; justify-content: center; }
-.fin-big-val { text-align: center; margin-bottom: 20px; }
-.fin-big-val small { text-transform: uppercase; font-size: 10px; font-weight: 700; color: #94a3b8; }
-.fin-big-val h2 { font-size: 28px; margin: 0; color: #0f172a; }
-.fin-mini-list { display: flex; flex-direction: column; gap: 8px; padding: 0 10px; }
-.mini-trans { font-size: 12px; display: flex; align-items: center; gap: 8px; color: #475569; }
+.idea-row-simple { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-hover); border-radius: 6px; font-size: 12px; }
 
-/* 3. LISTAS (TO-DO, MERCADO, IDEIAS) */
-.list-scroll { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-
-/* Items To-Do */
-.item-row { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-.item-row:hover { background: #f8fafc; }
-.check-circle { 
-  width: 16px; height: 16px; border: 1px solid #cbd5e1; border-radius: 50%; 
-  display: flex; align-items: center; justify-content: center; 
-}
-.check-circle.checked { background: #10b981; border-color: #10b981; }
-.risked { text-decoration: line-through; color: #94a3b8; }
-
-/* Items Mercado */
-.checkbox-sq {
-  width: 14px; height: 14px; border: 1px solid #cbd5e1; border-radius: 3px;
-  display: flex; align-items: center; justify-content: center;
-}
-.checkbox-sq.checked { background: #10b981; border-color: #10b981; }
-
-/* Items Ideias */
-.idea-row-simple { 
-  display: flex; justify-content: space-between; align-items: center; 
-  padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 12px; 
-}
-.idea-row-simple button { background: none; border: none; color: #cbd5e1; cursor: pointer; }
-.idea-row-simple button:hover { color: #ef4444; }
-
-/* 5. ESTUDOS (LISTA SIMPLES) */
+/* --- ESTUDOS (CORRIGIDO) --- */
 .study-container { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-.study-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-.tab-btn { background: none; border: none; font-size: 12px; color: #64748b; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-.tab-btn.active { background: #f0fdf4; color: #10b981; }
+.study-tabs { display: flex; gap: 5px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; flex-shrink: 0; }
+.tab-btn { background: none; border: none; font-size: 11px; color: var(--text-sub); font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.tab-btn.active { background: var(--bg-hover); color: var(--accent-color); }
 
-.study-content-cols { display: flex; gap: 20px; flex: 1; overflow: hidden; }
-.study-col { flex: 1; display: flex; flex-direction: column; }
-.col-title { font-size: 11px; text-transform: uppercase; color: #94a3b8; margin: 0 0 8px 0; }
-.simple-list { display: flex; flex-direction: column; gap: 6px; }
+.study-content-cols { display: flex; gap: 15px; flex: 1; overflow: hidden; }
+.study-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.col-title { font-size: 10px; text-transform: uppercase; color: var(--text-sub); margin: 0; font-weight: 700; }
+
+.simple-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
 .simple-list-item { 
-  display: flex; align-items: center; gap: 8px; font-size: 12px; color: #334155; 
+  display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); 
   padding: 4px 0;
 }
-.simple-list-item svg { color: #94a3b8; }
-.link-text { color: #10b981; text-decoration: none; font-weight: 500; }
+.simple-list-item svg { color: var(--text-sub); width: 14px; height: 14px; }
 
-/* 6. PLANEJAMENTO (SEM INPUTS) */
+/* METAS */
 .plans-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.plan-block { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-.plan-block.open { border-color: #10b981; }
-.plan-header { padding: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: white; }
+.plan-block { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+.plan-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--bg-card); }
 .plan-meta strong { display: block; font-size: 12px; margin-bottom: 4px; }
-.progress-track { width: 60px; height: 4px; background: #f1f5f9; border-radius: 2px; }
-.progress-fill { height: 100%; background: #10b981; }
+.progress-track { width: 100%; height: 4px; background: var(--bg-hover); border-radius: 2px; }
+.progress-fill { height: 100%; background: var(--accent-color); border-radius: 3px; }
 
-.plan-steps-list { padding: 8px; background: #f8fafc; display: flex; flex-direction: column; gap: 4px; border-top: 1px solid #f1f5f9; }
-.plan-step-item { display: flex; align-items: center; gap: 8px; font-size: 11px; cursor: pointer; }
-.step-check { width: 8px; height: 8px; border: 1px solid #cbd5e1; border-radius: 50%; background: white; }
-.step-check.checked { background: #10b981; border-color: #10b981; }
+/* SKELETON */
+.skeleton-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 10px; animation: pulse 1.5s infinite ease-in-out; }
+.skeleton-header { width: 40%; height: 20px; background: var(--bg-hover); border-radius: 4px; }
+.skeleton-body { width: 100%; height: 100%; background: var(--bg-hover); border-radius: 8px; }
+.skeleton-line { width: 100%; height: 30px; background: var(--bg-hover); border-radius: 6px; animation: pulse 1.5s infinite ease-in-out; }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
 
-/* --- RESPONSIVIDADE (MOBILE) --- */
+/* RESPONSIVIDADE */
 @media (max-width: 1024px) {
   .dsh-grid-container {
     grid-template-columns: 1fr 1fr;
@@ -206,18 +233,24 @@
 }
 
 @media (max-width: 600px) {
-  /* Remove margem quando no celular */
-  .dsh-wrapper.sidebar-open, .dsh-wrapper.sidebar-closed { 
-    margin-left: 0; 
-    width: 100%; 
-    padding: 15px; 
+  .dsh-wrapper.sidebar-open, .dsh-wrapper.sidebar-closed { margin-left: 0; width: 100%; padding: 15px; }
+  .dsh-grid-container { display: flex; flex-direction: column; gap: 15px; }
+  .menu-btn-mobile { display: flex; }
+  
+  .agenda-layout { 
+    display: flex; flex-direction: column; 
+    height: auto; gap: 15px;
   }
   
-  .dsh-grid-container {
-    display: flex; flex-direction: column; gap: 15px;
+  .day-events-list { 
+    border-left: none; border-top: 1px solid var(--border-color); 
+    padding-left: 0; padding-top: 15px; 
+    height: auto;
   }
-  .mini-calendar-grid { width: 100%; }
-  .menu-btn-mobile { 
-    display: flex; 
-  }
+  
+  .events-scroll { overflow: visible; }
+  
+  /* Ajuste para dias no celular */
+  .days-grid { gap: 6px; }
+  .cal-day-cell { height: 32px; font-size: 12px; }
 }

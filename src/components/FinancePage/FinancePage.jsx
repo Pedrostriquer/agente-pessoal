@@ -1,32 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FinancePage.css';
 import { 
   Wallet, TrendingUp, TrendingDown, Calendar, 
   ArrowUpRight, ArrowDownLeft, 
   Plus, MoreHorizontal, Bell 
 } from 'lucide-react';
+// Importando os serviços de finanças
+import { getFinanceReport, addTransaction } from '../../services/financeService';
 
 const FinancePage = ({ isSidebarOpen }) => {
   
-  // --- MOCK DATA ---
-  
-  // 1. Extrato (Movimentações)
-  const [transactions, setTransactions] = useState([
-    { id: 1, title: 'Supermercado Semanal', type: 'expense', value: 450.50, category: 'Alimentação', date: '05/12' },
-    { id: 2, title: 'Freela Design', type: 'income', value: 1200.00, category: 'Serviços', date: '04/12' },
-    { id: 3, title: 'Uber', type: 'expense', value: 24.90, category: 'Transporte', date: '03/12' },
-    { id: 4, title: 'Cinema + Pipoca', type: 'expense', value: 85.00, category: 'Lazer', date: '02/12' },
-    { id: 5, title: 'Reembolso Empresa', type: 'income', value: 150.00, category: 'Outros', date: '01/12' },
-  ]);
+  // --- ESTADOS DO RELATÓRIO E TRANSAÇÕES (Dados Vivos/Locais) ---
+  const [transactions, setTransactions] = useState([]); // Será populada apenas localmente via addTransaction
+  const [summary, setSummary] = useState({ balance: 0, income: 0, expense: 0 });
+  const [loading, setLoading] = useState(false);
 
-  // 2. Fixos (Receitas e Gastos)
-  const [fixedItems, setFixedItems] = useState({
+  // --- ESTADOS DE INPUTS ---
+  const [newTransTitle, setNewTransTitle] = useState('');
+  const [newTransValue, setNewTransValue] = useState('');
+  
+  // --- DADOS FIXOS (Mockados) ---
+  const [fixedItems] = useState({
     incomes: [
       { id: 1, title: 'Salário Mensal', value: 5500.00, day: '05' },
       { id: 2, title: 'Aluguel Garagem', value: 200.00, day: '10' },
     ],
     expenses: [
-      // Adicionei a propriedade 'reminder: true' aqui
       { id: 101, title: 'Aluguel Apt', value: 1800.00, day: '10', reminder: true }, 
       { id: 102, title: 'Internet Fibra', value: 120.00, day: '15', reminder: false },
       { id: 103, title: 'Spotify', value: 21.90, day: '20', reminder: false },
@@ -34,32 +33,75 @@ const FinancePage = ({ isSidebarOpen }) => {
     ]
   });
 
-  const [newTransTitle, setNewTransTitle] = useState('');
-  const [newTransValue, setNewTransValue] = useState('');
+  useEffect(() => {
+    fetchFinanceData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // --- CÁLCULOS ---
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.value, 0);
-  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.value, 0);
-  const currentBalance = 7450.00 + totalIncome - totalExpense; 
+  // --- HANDLER DE FETCH ---
+  const fetchFinanceData = async () => {
+    setLoading(true);
+    try {
+      const data = await getFinanceReport();
+      
+      // Mapeamento CORRIGIDO para a NOVA estrutura da API
+      const resumo = data.resumo_mes || {};
+      setSummary({
+        // saldo_atual_conta -> balance
+        balance: data.saldo_atual_conta || 0,
+        // resumo_mes.ganhos -> income
+        income: resumo.ganhos || 0, 
+        // resumo_mes.gastos -> expense
+        expense: resumo.gastos || 0
+      });
+      
+      // Não tentamos mais buscar data.history, a lista será populada pelo addTransaction
+      // Se você tiver uma API para listar transações, adicione-a aqui
+      
+    } catch (error) {
+      console.error("Erro ao carregar dados financeiros:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // --- HANDLERS ---
-  const handleAddTransaction = (type) => {
-    if(!newTransTitle || !newTransValue) return;
+  // --- HANDLER DE ADICIONAR TRANSAÇÃO ---
+  const handleAddTransaction = async (type) => {
+    if(!newTransTitle || !newTransValue) return alert("Preencha a descrição e o valor.");
+
     const val = parseFloat(newTransValue.replace(',', '.'));
-    if(isNaN(val)) return;
+    if(isNaN(val)) return alert("Valor inválido.");
 
-    const newT = {
-      id: Date.now(),
-      title: newTransTitle,
-      type: type, 
-      value: val,
-      category: 'Avulso',
-      date: 'Hoje'
-    };
+    try {
+      // Chamada à API
+      const result = await addTransaction(val, type, newTransTitle, 'Avulso'); 
 
-    setTransactions([newT, ...transactions]);
-    setNewTransTitle('');
-    setNewTransValue('');
+      // Se a API retornar a transação criada, adicionamos ela no estado LOCAL
+      setTransactions(prev => [{
+        id: result.id || Date.now(),
+        type: type,
+        description: newTransTitle,
+        amount: val,
+        category: 'Avulso',
+        date: 'Hoje'
+      }, ...prev]);
+
+      // Limpa os inputs
+      setNewTransTitle('');
+      setNewTransValue('');
+      
+      // Recarrega os dados para atualizar o resumo (que vem da API)
+      fetchFinanceData();
+
+    } catch (error) {
+      console.error("Erro ao adicionar transação:", error);
+      alert(`Erro ao adicionar transação: ${error.message}`);
+    }
+  };
+
+  // --- HELPER DE FORMATAÇÃO ---
+  const formatValue = (value) => {
+    return Number(value).toLocaleString('pt-BR', {minimumFractionDigits: 2});
   };
 
   return (
@@ -71,17 +113,17 @@ const FinancePage = ({ isSidebarOpen }) => {
           <p>Acompanhe seu fluxo de caixa e obrigações mensais.</p>
         </div>
         <div className="fin-period-badge">
-          <Calendar size={16} /> <span>Dezembro 2025</span>
+          <Calendar size={16} /> <span>{loading ? 'Atualizando...' : 'Dados Vivos'}</span>
         </div>
       </header>
 
-      {/* 1. CARDS DE RESUMO */}
+      {/* 1. CARDS DE RESUMO (Dados CORRIGIDOS da API) */}
       <div className="summary-grid">
         <div className="summary-card balance">
           <div className="sum-icon-box blue"><Wallet size={24}/></div>
           <div className="sum-info">
             <span>Saldo Total</span>
-            <h2>R$ {currentBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+            <h2>R$ {formatValue(summary.balance)}</h2>
           </div>
         </div>
 
@@ -89,7 +131,7 @@ const FinancePage = ({ isSidebarOpen }) => {
           <div className="sum-icon-box green"><TrendingUp size={24}/></div>
           <div className="sum-info">
             <span>Entradas (Mês)</span>
-            <h2 className="pos">+ R$ {totalIncome.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+            <h2 className="pos">+ R$ {formatValue(summary.income)}</h2>
           </div>
         </div>
 
@@ -97,7 +139,7 @@ const FinancePage = ({ isSidebarOpen }) => {
           <div className="sum-icon-box red"><TrendingDown size={24}/></div>
           <div className="sum-info">
             <span>Saídas (Mês)</span>
-            <h2 className="neg">- R$ {totalExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h2>
+            <h2 className="neg">- R$ {formatValue(summary.expense)}</h2>
           </div>
         </div>
       </div>
@@ -112,7 +154,7 @@ const FinancePage = ({ isSidebarOpen }) => {
             <button className="icon-btn"><MoreHorizontal size={18}/></button>
           </div>
 
-          {/* Input Rápido (Branco e Clean) */}
+          {/* Input Rápido */}
           <div className="quick-add-bar">
             <input 
               placeholder="Descrição (ex: Almoço)" 
@@ -121,7 +163,7 @@ const FinancePage = ({ isSidebarOpen }) => {
             />
             <input 
               type="number" 
-              placeholder="R$ 0,00" 
+              placeholder="0,00" 
               className="value-input"
               value={newTransValue}
               onChange={e => setNewTransValue(e.target.value)}
@@ -138,34 +180,45 @@ const FinancePage = ({ isSidebarOpen }) => {
 
           {/* Lista de Transações */}
           <div className="transactions-list-scroll">
-            {transactions.map(item => (
-              <div key={item.id} className="trans-row">
-                <div className={`trans-icon ${item.type}`}>
-                  {item.type === 'income' ? <ArrowUpRight size={18}/> : <ArrowDownLeft size={18}/>}
-                </div>
-                <div className="trans-details">
-                  <strong>{item.title}</strong>
-                  <div className="trans-meta">
-                    <span>{item.category}</span>
-                    <span className="dot">•</span>
-                    <span>{item.date}</span>
-                  </div>
-                </div>
-                <div className={`trans-value ${item.type}`}>
-                  {item.type === 'income' ? '+' : '-'} R$ {item.value.toFixed(2)}
-                </div>
-              </div>
-            ))}
+            {transactions.length === 0 && !loading ? (
+                <p style={{textAlign: 'center', color: '#94a3b8', padding: '30px'}}>Adicione sua primeira transação.</p>
+            ) : (
+                transactions.map((item, idx) => {
+                    // Mapeando campos (amount, type, description)
+                    const type = item.type;
+                    const isIncome = type === 'income';
+                    const value = Number(item.amount);
+                    
+                    return (
+                      <div key={item.id || idx} className="trans-row">
+                        <div className={`trans-icon ${type}`}>
+                          {isIncome ? <ArrowUpRight size={18}/> : <ArrowDownLeft size={18}/>}
+                        </div>
+                        <div className="trans-details">
+                          <strong>{item.description}</strong>
+                          <div className="trans-meta">
+                            <span>{item.category || 'Avulso'}</span>
+                            <span className="dot">•</span>
+                            <span>{item.date || 'Hoje'}</span>
+                          </div>
+                        </div>
+                        <div className={`trans-value ${type}`}>
+                          {isIncome ? '+' : '-'} R$ {formatValue(value)}
+                        </div>
+                      </div>
+                    )
+                })
+            )}
           </div>
         </div>
 
-        {/* DIREITA: FIXOS */}
+        {/* DIREITA: FIXOS (Mockados) */}
         <div className="fin-sidebar-col">
           
           {/* Receitas Fixas */}
           <div className="fin-panel side-panel">
             <div className="panel-header-sm">
-              <h4>Receitas Fixas (Salários)</h4>
+              <h4>Receitas Fixas (Mock)</h4>
               <span className="badge-green">{fixedItems.incomes.length}</span>
             </div>
             <div className="fixed-list">
@@ -175,16 +228,16 @@ const FinancePage = ({ isSidebarOpen }) => {
                     <strong>{inc.title}</strong>
                     <small>Dia {inc.day}</small>
                   </div>
-                  <span className="fixed-val pos">R$ {inc.value}</span>
+                  <span className="fixed-val pos">R$ {formatValue(inc.value)}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Gastos Fixos (Com Tag de Lembrete) */}
+          {/* Gastos Fixos */}
           <div className="fin-panel side-panel">
             <div className="panel-header-sm">
-              <h4>Gastos Fixos (Assinaturas)</h4>
+              <h4>Gastos Fixos (Mock)</h4>
               <span className="badge-red">{fixedItems.expenses.length}</span>
             </div>
             <div className="fixed-list">
@@ -193,7 +246,6 @@ const FinancePage = ({ isSidebarOpen }) => {
                   <div className="fixed-info">
                     <div className="title-row">
                       <strong>{exp.title}</strong>
-                      {/* Tag de Lembrete aqui */}
                       {exp.reminder && (
                         <span className="reminder-tag">
                           <Bell size={10} /> Lembrete
@@ -202,14 +254,12 @@ const FinancePage = ({ isSidebarOpen }) => {
                     </div>
                     <small>Vence dia {exp.day}</small>
                   </div>
-                  <span className="fixed-val neg">- R$ {exp.value}</span>
+                  <span className="fixed-val neg">- R$ {formatValue(exp.value)}</span>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );

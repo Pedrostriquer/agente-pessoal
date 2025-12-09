@@ -1,32 +1,43 @@
 import React, { useState } from 'react';
 import './LoginPage.css';
-import { Mail, Lock, Sparkles } from 'lucide-react';
+import { Mail, Lock, Sparkles, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { loginService } from '../../services/authService';
 
-// Recebe a função onLoginSuccess para avisar o App.jsx que o login foi feito
 const LoginPage = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Estados novos
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e) => {
-    e.preventDefault(); // Impede o recarregamento da página
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!email || !password) return alert("Por favor, preencha todos os campos.");
 
-    // Lógica de Validação (Simples)
-    if (!email || !password) {
-      alert("Por favor, preencha e-mail e senha.");
-      return;
+    setIsLoading(true);
+    try {
+      // Chamada real à API
+      const data = await loginService(email, password);
+      
+      // Se tiver sucesso, você pode salvar o token se a API retornar
+      if (data.token) {
+        localStorage.setItem('user_token', data.token);
+      }
+      
+      onLoginSuccess(data); // Passa os dados do usuário para o App
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Falha ao entrar: " + error.message);
+    } finally {
+      setIsLoading(false);
     }
-    
-    // --- Simulação de Login Bem-sucedido ---
-    // Aqui você faria a chamada para sua API de autenticação.
-    // Se a API retornar sucesso, você chama onLoginSuccess().
-    console.log("Tentando login com:", { email, password });
-    onLoginSuccess();
   };
 
   return (
     <div className="login-page-wrapper">
       
-      {/* PAINEL ESQUERDO: BRANDING E VISUAL */}
+      {/* PAINEL ESQUERDO: BRANDING */}
       <div className="login-branding-panel">
         <div className="brand-content">
           <div className="brand-logo">
@@ -52,26 +63,35 @@ const LoginPage = ({ onLoginSuccess }) => {
             
             {/* Campo de E-mail */}
             <div className="input-group">
-              <Mail className="input-icon" size={20} />
+              <Mail className="input-icon left" size={20} />
               <input 
                 type="email" 
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="input-field"
               />
             </div>
 
-            {/* Campo de Senha */}
+            {/* Campo de Senha com Toggle */}
             <div className="input-group">
-              <Lock className="input-icon" size={20} />
+              <Lock className="input-icon left" size={20} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="Sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="input-field password"
               />
+              <button 
+                type="button"
+                className="btn-toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             
             <div className="form-helpers">
@@ -82,13 +102,17 @@ const LoginPage = ({ onLoginSuccess }) => {
               <a href="#">Esqueceu a senha?</a>
             </div>
 
-            <button type="submit" className="btn-login">
-              Entrar
+            <button type="submit" className="btn-login" disabled={isLoading}>
+              {isLoading ? (
+                <span className="flex-center"><Loader2 className="spin" size={20}/> Entrando...</span>
+              ) : (
+                "Entrar"
+              )}
             </button>
           </form>
 
           <div className="form-footer">
-            Não tem uma conta? <a href="#">Cadastre-se</a>
+            Não tem uma conta? <a href="/start">Cadastre-se</a>
           </div>
         </div>
       </div>
