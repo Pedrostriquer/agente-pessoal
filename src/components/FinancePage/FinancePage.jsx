@@ -3,7 +3,8 @@ import './FinancePage.css';
 import { 
   Wallet, TrendingUp, TrendingDown, Calendar, 
   ArrowUpRight, ArrowDownLeft, 
-  Plus, Target, Search, Filter
+  Plus, Target, Search, Filter, 
+  ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { getFinanceReport, addTransaction, searchTransactions } from '../../services/financeService';
 
@@ -14,13 +15,17 @@ const FinancePage = ({ isSidebarOpen }) => {
   const [summary, setSummary] = useState({ balance: 0, income: 0, expense: 0 });
   const [goal, setGoal] = useState({ limit: 0, current: 0, available: 0, percent: 0 });
   
-  // --- ESTADOS DE CONTROLE (PAGINAÇÃO & FILTRO) ---
+  // --- ESTADOS DE CONTROLE ---
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   
+  // Paginação
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const ITEMS_PER_PAGE = 5; // Deve bater com o limit da API ou ser ajustável
+
   // Filtros
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -28,25 +33,25 @@ const FinancePage = ({ isSidebarOpen }) => {
   const [newTransTitle, setNewTransTitle] = useState('');
   const [newTransValue, setNewTransValue] = useState('');
   
-  // Mock de Receitas Fixas (Mantido)
+  // Mock de Receitas Fixas
   const [fixedIncomes] = useState([
     { id: 1, title: 'Salário Mensal', value: 5500.00, day: '05' },
   ]);
 
-  // Carrega relatório e PRIMEIRA página de transações ao montar
+  // Carrega dados iniciais
   useEffect(() => {
     fetchReport();
-    loadTransactions(1, true); 
+    loadTransactions(1); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- 1. BUSCA RELATÓRIO (SALDO/META) ---
+  // --- 1. BUSCA RELATÓRIO ---
   const fetchReport = async () => {
     try {
       const reportData = await getFinanceReport();
       const resumo = reportData.resumo_mes || {};
       const config = reportData.config || {};
-      const metaApi = reportData.meta || {};
+      // const metaApi = reportData.meta || {}; // Se precisar
 
       setSummary({
         balance: reportData.saldo_atual_conta || 0,
@@ -54,7 +59,6 @@ const FinancePage = ({ isSidebarOpen }) => {
         expense: resumo.gastos || 0
       });
 
-      // Cálculo de Meta (usando limite_estipulado conforme pedido anterior)
       const limitVal = Number(config.limite_estipulado || 0);
       const spentVal = Number(resumo.gastos || 0);
       let calculatedPercent = 0;
@@ -72,53 +76,74 @@ const FinancePage = ({ isSidebarOpen }) => {
     }
   };
 
-  // --- 2. BUSCA TRANSAÇÕES (COM PAGINAÇÃO) ---
-  const loadTransactions = async (pageNum, reset = false) => {
-    if (reset) {
-      setLoading(true);
-      setTransactions([]); // Limpa lista visualmente se for reset
-    } else {
-      setLoadingMore(true);
-    }
-
+  // --- 2. BUSCA TRANSAÇÕES (Paginada e Dinâmica) ---
+  const loadTransactions = async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const limit = 20;
-      // Chama a nova função do service
-      const data = await searchTransactions(pageNum, limit, categoryFilter, searchTerm);
+      // Passa o filtro de categoria atual e termo de busca
+      const data = await searchTransactions(pageNum, ITEMS_PER_PAGE, categoryFilter, searchTerm);
       
-      const newItems = data.transactions.map((t, index) => ({
-        id: t.id || `hist-${index}-${pageNum}`,
-        type: t.type,
+      // 1. Atualiza lista de categorias disponíveis (Vindo da API)
+      if (data.categories && Array.isArray(data.categories)) {
+        setAvailableCategories(data.categories);
+      }
+
+      // 2. Calcula paginação
+      const total = data.total || 0;
+      setTotalItems(total);
+      setTotalPages(Math.ceil(total / ITEMS_PER_PAGE));
+      setPage(pageNum);
+
+      // 3. Mapeia transações
+      const list = data.transactions || [];
+      const newItems = list.map((t, index) => ({
+        id: t.id || `tr-${index}-${pageNum}`,
+        type: t.type, // 'income' ou 'expense'
         amount: Number(t.amount),
         description: t.description,
         category: t.category,
         date: new Date(t.date).toLocaleDateString('pt-BR')
       }));
 
-      if (reset) {
-        setTransactions(newItems);
-      } else {
-        setTransactions(prev => [...prev, ...newItems]);
-      }
-
-      // Verifica se tem mais páginas
-      setHasMore(newItems.length === limit);
-      setPage(pageNum);
+      setTransactions(newItems);
 
     } catch (error) {
       console.error("Erro ao buscar transações:", error);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
-  // --- HANDLERS DE FILTRO ---
-  const handleSearch = () => {
-    loadTransactions(1, true); // Reseta e busca página 1 com os filtros atuais
+  // --- HANDLERS ---
+  
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      loadTransactions(1); // Volta para página 1 ao filtrar
+    }
   };
 
-  // --- HANDLER DE NOVA TRANSAÇÃO ---
+  const handleCategorySelect = (cat) => {
+    // Se clicar na mesma, desmarca. Se clicar em outra, seleciona.
+    const newCat = categoryFilter === cat ? '' : cat;
+    setCategoryFilter(newCat);
+    // Para garantir que a busca use o valor novo, chamamos a busca após a atualização do estado
+    // O useEffect abaixo garante que loadTransactions(1) será chamado quando categoryFilter mudar.
+  };
+  
+  // Recarrega transações para a primeira página sempre que o filtro de categoria mudar
+  useEffect(() => {
+     loadTransactions(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryFilter]);
+
+
+  const changePage = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      loadTransactions(newPage);
+    }
+  };
+
+  // Adicionar Transação
   const handleAddTransaction = async (type) => {
     if(!newTransTitle || !newTransValue) return alert("Preencha a descrição e o valor.");
     const val = parseFloat(newTransValue.replace(',', '.'));
@@ -129,9 +154,8 @@ const FinancePage = ({ isSidebarOpen }) => {
       setNewTransTitle('');
       setNewTransValue('');
       
-      // Atualiza tudo
       fetchReport();
-      loadTransactions(1, true); // Recarrega a lista do zero para aparecer o item novo no topo
+      loadTransactions(1); // Recarrega primeira página
 
     } catch (error) {
       alert(`Erro: ${error.message}`);
@@ -153,7 +177,7 @@ const FinancePage = ({ isSidebarOpen }) => {
         </div>
       </header>
 
-      {/* CARDS DE RESUMO */}
+      {/* CARDS DE RESUMO (Mantido) */}
       <div className="summary-grid">
         <div className="summary-card balance">
           <div className="sum-icon-box blue"><Wallet size={24}/></div>
@@ -188,39 +212,46 @@ const FinancePage = ({ isSidebarOpen }) => {
         <div className="fin-panel main-panel">
           <div className="panel-header">
             <h3><ArrowDownLeft size={18}/> Extrato</h3>
+            <span className="total-badge">{totalItems} registros</span>
           </div>
 
-          {/* BARRA DE FILTROS (NOVA) */}
-          <div className="filter-bar">
-             <div className="search-input-wrapper">
-               <Search size={14} className="search-icon"/>
-               <input 
-                 placeholder="Buscar transação..." 
-                 value={searchTerm}
-                 onChange={e => setSearchTerm(e.target.value)}
-                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-               />
-             </div>
-             
-             <div className="category-select-wrapper">
-               <Filter size={14} className="filter-icon"/>
-               <select 
-                 value={categoryFilter} 
-                 onChange={e => setCategoryFilter(e.target.value)}
-               >
-                 <option value="">Todas Categorias</option>
-                 <option value="Alimentação">Alimentação</option>
-                 <option value="Transporte">Transporte</option>
-                 <option value="Lazer">Lazer</option>
-                 <option value="Saúde">Saúde</option>
-                 <option value="Moradia">Moradia</option>
-                 <option value="Avulso">Avulso</option>
-               </select>
+          {/* BARRA DE BUSCA E FILTROS */}
+          <div className="filter-section">
+             {/* Busca Texto */}
+             <div className="search-row">
+               <div className="search-input-wrapper">
+                 <Search size={14} className="search-icon"/>
+                 <input 
+                   placeholder="Buscar por descrição..." 
+                   value={searchTerm}
+                   onChange={e => setSearchTerm(e.target.value)}
+                   onKeyDown={handleSearchKeyDown}
+                 />
+               </div>
+               <button className="btn-filter-apply" onClick={() => loadTransactions(1)}>
+                 Buscar
+               </button>
              </div>
 
-             <button className="btn-filter-apply" onClick={handleSearch}>
-               Filtrar
-             </button>
+             {/* Tags de Categoria Dinâmicas */}
+             <div className="tags-container">
+               <button 
+                 className={`tag-chip ${categoryFilter === '' ? 'active' : ''}`}
+                 onClick={() => setCategoryFilter('')}
+               >
+                 Todas
+               </button>
+               
+               {availableCategories.map((cat) => (
+                 <button 
+                   key={cat} 
+                   className={`tag-chip ${categoryFilter === cat ? 'active' : ''}`}
+                   onClick={() => handleCategorySelect(cat)}
+                 >
+                   {cat}
+                 </button>
+               ))}
+             </div>
           </div>
 
           {/* INPUT RÁPIDO */}
@@ -238,10 +269,10 @@ const FinancePage = ({ isSidebarOpen }) => {
               onChange={e => setNewTransValue(e.target.value)}
             />
             <div className="btn-group">
-              <button className="btn-add-inc" onClick={() => handleAddTransaction('income')}>
+              <button className="btn-add-inc" onClick={() => handleAddTransaction('income')} title="Entrada">
                 <Plus size={16}/>
               </button>
-              <button className="btn-add-exp" onClick={() => handleAddTransaction('expense')}>
+              <button className="btn-add-exp" onClick={() => handleAddTransaction('expense')} title="Saída">
                 <Plus size={16}/>
               </button>
             </div>
@@ -249,22 +280,25 @@ const FinancePage = ({ isSidebarOpen }) => {
 
           {/* LISTA DE TRANSAÇÕES */}
           <div className="transactions-list-scroll">
-            {transactions.length === 0 && !loading ? (
-                <p style={{textAlign: 'center', color: '#94a3b8', padding: '30px'}}>
-                  Nenhuma transação encontrada.
-                </p>
+            {loading ? (
+                <div className="loading-state">Carregando...</div>
+            ) : transactions.length === 0 ? (
+                <div className="empty-state-fin">
+                  <Filter size={24} color="#cbd5e1"/>
+                  <p>Nenhuma transação encontrada.</p>
+                </div>
             ) : (
-                transactions.map((item, idx) => {
+                transactions.map((item) => {
                     const isIncome = item.type === 'income';
                     return (
-                      <div key={item.id || idx} className="trans-row">
+                      <div key={item.id} className="trans-row">
                         <div className={`trans-icon ${item.type}`}>
                           {isIncome ? <ArrowUpRight size={18}/> : <ArrowDownLeft size={18}/>}
                         </div>
                         <div className="trans-details">
                           <strong>{item.description}</strong>
                           <div className="trans-meta">
-                            <span className="cat-badge">{item.category || 'Geral'}</span>
+                            <span className="cat-badge">{item.category}</span>
                             <span className="dot">•</span>
                             <span>{item.date}</span>
                           </div>
@@ -276,24 +310,37 @@ const FinancePage = ({ isSidebarOpen }) => {
                     )
                 })
             )}
-            
-            {/* Botão Carregar Mais */}
-            {hasMore && !loading && transactions.length > 0 && (
-              <button 
-                className="btn-load-more" 
-                onClick={() => loadTransactions(page + 1)}
-                disabled={loadingMore}
-              >
-                {loadingMore ? 'Carregando...' : 'Carregar Mais'}
-              </button>
-            )}
           </div>
+
+          {/* PAGINAÇÃO */}
+          {totalPages > 1 && (
+            <div className="pagination-controls">
+              <button 
+                className="page-btn" 
+                onClick={() => changePage(page - 1)}
+                disabled={page === 1 || loading}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              
+              <span className="page-info">
+                Página <strong>{page}</strong> de {totalPages}
+              </span>
+
+              <button 
+                className="page-btn" 
+                onClick={() => changePage(page + 1)}
+                disabled={page === totalPages || loading}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
+
         </div>
 
-        {/* DIREITA: META + MOCK RECEITAS */}
+        {/* DIREITA: META + MOCK RECEITAS (Mantido igual) */}
         <div className="fin-sidebar-col">
-          
-          {/* CARD DE META (INTEGRADO) */}
           <div className="fin-panel side-panel goal-panel">
             <div className="panel-header-sm">
               <h4 style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
@@ -303,7 +350,6 @@ const FinancePage = ({ isSidebarOpen }) => {
                 {goal.percent.toFixed(1)}%
               </span>
             </div>
-
             <div className="goal-chart-container">
               <div className="progress-bg">
                 <div 
@@ -312,7 +358,6 @@ const FinancePage = ({ isSidebarOpen }) => {
                 ></div>
               </div>
             </div>
-
             <div className="goal-details-grid">
               <div className="g-item">
                 <span>Gasto Atual</span>
@@ -323,7 +368,6 @@ const FinancePage = ({ isSidebarOpen }) => {
                 <strong>R$ {formatValue(goal.limit)}</strong>
               </div>
             </div>
-
             <div className="goal-footer">
               <span>Disponível:</span>
               <h3 className={goal.available < 0 ? 'neg-text' : 'pos-text'}>
@@ -332,7 +376,6 @@ const FinancePage = ({ isSidebarOpen }) => {
             </div>
           </div>
 
-          {/* Receitas Fixas (Mock) */}
           <div className="fin-panel side-panel">
             <div className="panel-header-sm">
               <h4>Receitas Fixas</h4>
@@ -350,8 +393,8 @@ const FinancePage = ({ isSidebarOpen }) => {
               ))}
             </div>
           </div>
-
         </div>
+
       </div>
     </div>
   );
