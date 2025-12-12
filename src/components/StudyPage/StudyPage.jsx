@@ -1,177 +1,210 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './StudyPage.css';
 import { 
-  Plus, Trash2, ChevronDown, ChevronUp, 
-  BookOpen, CalendarDays, FileText 
+  BookOpen, Plus, GraduationCap, 
+  BrainCircuit, ArrowRight, CheckCircle2 
 } from 'lucide-react';
+import { 
+  getSubjects, createSubject, 
+  createStudyPlanDraft, advanceStudyPlan 
+} from '../../services/studyService';
 
 const StudyPage = ({ isSidebarOpen }) => {
+  const [loading, setLoading] = useState(false);
+  const [subjects, setSubjects] = useState([]);
   
-  // --- ESTADOS ---
-
-  // 1. Matérias
-  const [subjects, setSubjects] = useState([
-    { 
-      id: 1, 
-      name: 'Cálculo II', 
-      // Agora um campo único de texto livre
-      content: `Professor: Roberto
-Sala: Bloco C - 304
-Horário: Seg/Qua 19:00
-
---- Avaliações ---
-P1: 4.5 (Preciso recuperar)
-P2: 12/12 (Matéria toda)
-
---- Anotações ---
-Estudar regra da cadeia e integrais duplas.`
-    },
-    { 
-      id: 2, 
-      name: 'Engenharia de Software', 
-      content: `Professora: Ana
-Laboratório 02
-
-Entregar diagrama de classes impresso até dia 15.
-Nota atual: 9.0`
-    }
-  ]);
-
+  // Inputs Matéria
   const [newSubjectName, setNewSubjectName] = useState('');
-  const [expandedId, setExpandedId] = useState(null);
+  const [newSubjectCategory, setNewSubjectCategory] = useState('');
 
-  // 2. Horário Semanal (Visual apenas)
-  const schedule = [
-    { day: 'Seg', classes: [{ name: 'Cálculo II', time: '19:00' }, { name: 'Física', time: '21:00' }] },
-    { day: 'Ter', classes: [{ name: 'Eng. Soft', time: '19:00' }] },
-    { day: 'Qua', classes: [{ name: 'Cálculo II', time: '19:00' }] },
-    { day: 'Qui', classes: [{ name: 'Eng. Soft', time: '21:00' }] },
-    { day: 'Sex', classes: [] },
-  ];
+  // Inputs Plano de Estudo
+  const [studyContent, setStudyContent] = useState('');
+  const [activePlan, setActivePlan] = useState(null); // Armazena o plano criado/ativo
+  const [loadingPlan, setLoadingPlan] = useState(false);
 
-  // --- HANDLERS ---
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
 
-  const handleAddSubject = () => {
-    if (!newSubjectName) return;
-    const newSub = {
-      id: Date.now(),
-      name: newSubjectName,
-      content: '' // Começa vazio
-    };
-    setSubjects([...subjects, newSub]);
-    setNewSubjectName('');
+  const fetchSubjects = async () => {
+    setLoading(true);
+    try {
+      const data = await getSubjects();
+      // O backend retorna array direto: [{id, name, category}, ...]
+      setSubjects(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Erro ao buscar matérias:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeSubject = (id) => {
-    setSubjects(subjects.filter(s => s.id !== id));
+  const handleAddSubject = async () => {
+    if (!newSubjectName) return alert("Digite o nome da matéria.");
+    
+    try {
+      await createSubject(newSubjectName, newSubjectCategory || 'Faculdade');
+      setNewSubjectName('');
+      setNewSubjectCategory('');
+      fetchSubjects(); // Recarrega a lista
+    } catch (error) {
+      alert("Erro ao criar matéria: " + error.message);
+    }
   };
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+  const handleCreatePlan = async () => {
+    if (!studyContent) return alert("O que você vai estudar hoje?");
+    
+    setLoadingPlan(true);
+    try {
+      const response = await createStudyPlanDraft(studyContent);
+      // Supondo que a resposta seja o objeto do plano ou { message, plan }
+      // Ajuste conforme o retorno real do seu backend
+      setActivePlan(response.plan || response); 
+      setStudyContent('');
+    } catch (error) {
+      alert("Erro ao gerar plano: " + error.message);
+    } finally {
+      setLoadingPlan(false);
+    }
   };
 
-  const updateContent = (id, newText) => {
-    setSubjects(subjects.map(s => s.id === id ? { ...s, content: newText } : s));
+  const handleAdvanceStep = async () => {
+    if (!activePlan?.id) return;
+
+    try {
+      const updated = await advanceStudyPlan(activePlan.id);
+      // Atualiza o plano com a resposta (novo passo ou status concluído)
+      setActivePlan(updated.plan || updated); 
+    } catch (error) {
+      alert("Erro ao avançar: " + error.message);
+    }
   };
 
   return (
     <div className={`study-wrapper fade-in ${isSidebarOpen ? 'open' : 'closed'}`}>
       
       <header className="page-header">
-        <h1>Área de Estudos</h1>
-        <p>Acompanhe suas aulas e anotações.</p>
+        <h1>Central de Estudos</h1>
+        <p>Gerencie suas matérias e crie planos de estudo inteligentes.</p>
       </header>
 
-      {/* 1. HORÁRIO SEMANAL (TOPO) */}
-      <section className="schedule-section">
-        <div className="section-title">
-          <CalendarDays size={18} color="#10b981"/>
-          <h3>Grade Semanal</h3>
-        </div>
-        <div className="schedule-grid">
-          {schedule.map((day, index) => (
-            <div key={index} className="day-card">
-              <div className="day-header">{day.day}</div>
-              <div className="class-list">
-                {day.classes.length > 0 ? (
-                  day.classes.map((cls, idx) => (
-                    <div key={idx} className="class-item">
-                      <span className="cls-time">{cls.time}</span>
-                      <span className="cls-name">{cls.name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <span className="no-class">-</span>
-                )}
-              </div>
+      <div className="study-grid-layout">
+        
+        {/* COLUNA ESQUERDA: MATÉRIAS */}
+        <section className="study-column">
+          <div className="section-header">
+            <BookOpen size={20} color="#10b981"/>
+            <h3>Minhas Matérias</h3>
+          </div>
+
+          {/* Card de Adicionar */}
+          <div className="add-subject-card">
+            <div className="input-group-row">
+              <input 
+                placeholder="Nome (ex: Cálculo I)..." 
+                value={newSubjectName}
+                onChange={e => setNewSubjectName(e.target.value)}
+              />
+              <input 
+                className="input-sm"
+                placeholder="Categoria..." 
+                value={newSubjectCategory}
+                onChange={e => setNewSubjectCategory(e.target.value)}
+              />
+              <button className="btn-add-sub" onClick={handleAddSubject}>
+                <Plus size={20}/>
+              </button>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      {/* 2. LISTA DE MATÉRIAS */}
-      <section className="subjects-section">
-        <div className="section-title">
-          <BookOpen size={18} color="#10b981"/>
-          <h3>Caderno de Matérias</h3>
-        </div>
+          {/* Lista */}
+          <div className="subjects-scroll">
+            {loading ? <p className="loading-text">Carregando...</p> : (
+              subjects.length === 0 ? (
+                <div className="empty-subjects">Nenhuma matéria cadastrada.</div>
+              ) : (
+                subjects.map(sub => (
+                  <div key={sub.id} className="subject-item">
+                    <div className="sub-icon-box">
+                      {sub.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="sub-info">
+                      <strong>{sub.name}</strong>
+                      <span>{sub.category}</span>
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+        </section>
 
-        {/* Adicionar Matéria */}
-        <div className="add-subject-bar">
-          <input 
-            placeholder="Nova matéria..." 
-            value={newSubjectName}
-            onChange={(e) => setNewSubjectName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddSubject()}
-          />
-          <button onClick={handleAddSubject}><Plus size={20}/></button>
-        </div>
+        {/* COLUNA DIREITA: PLANO DE ESTUDO (IA) */}
+        <section className="study-column">
+          <div className="section-header">
+            <BrainCircuit size={20} color="#8b5cf6"/>
+            <h3>Plano de Estudo (IA)</h3>
+          </div>
 
-        <div className="subjects-list">
-          {subjects.map(sub => {
-            const isOpen = expandedId === sub.id;
-            return (
-              <div key={sub.id} className={`subject-card ${isOpen ? 'expanded' : ''}`}>
+          <div className="plan-card-container">
+            {!activePlan ? (
+              // ESTADO: CRIAR NOVO PLANO
+              <div className="new-plan-box">
+                <p>O que vamos estudar hoje?</p>
+                <textarea 
+                  placeholder="Ex: Preciso aprender Derivadas e Integrais para a prova de amanhã..."
+                  value={studyContent}
+                  onChange={e => setStudyContent(e.target.value)}
+                />
+                <button 
+                  className="btn-generate-plan" 
+                  onClick={handleCreatePlan}
+                  disabled={loadingPlan}
+                >
+                  {loadingPlan ? 'Gerando Roteiro...' : 'Gerar Plano de Estudo'}
+                </button>
+              </div>
+            ) : (
+              // ESTADO: PLANO ATIVO
+              <div className="active-plan-box">
+                <div className="plan-header-active">
+                  <h4>Plano Ativo</h4>
+                  <span className="status-badge">Em andamento</span>
+                </div>
                 
-                {/* Cabeçalho do Card */}
-                <div className="subject-header" onClick={() => toggleExpand(sub.id)}>
-                  <div className="sub-title-row">
-                    <div className="icon-sub">{sub.name.charAt(0)}</div>
-                    <strong>{sub.name}</strong>
-                  </div>
-                  <div className="sub-actions">
-                    <button 
-                      className="btn-trash" 
-                      onClick={(e) => { e.stopPropagation(); removeSubject(sub.id); }}
-                    >
-                      <Trash2 size={16}/>
-                    </button>
-                    {isOpen ? <ChevronUp size={20} color="#64748b"/> : <ChevronDown size={20} color="#64748b"/>}
-                  </div>
+                <div className="plan-content-display">
+                  {/* Aqui você exibe os dados do plano retornado pelo backend */}
+                  {/* Exemplo genérico, ajuste conforme o JSON real do plano */}
+                  <p className="plan-topic">
+                    <strong>Tópico:</strong> {activePlan.topic || activePlan.title || 'Estudo Personalizado'}
+                  </p>
+                  
+                  {activePlan.current_step && (
+                    <div className="current-step-card">
+                      <span>Passo Atual:</span>
+                      <p>{activePlan.current_step}</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Conteúdo Expandido (EDITOR DE TEXTO LIVRE) */}
-                {isOpen && (
-                  <div className="subject-body">
-                    <div className="document-editor">
-                      <div className="editor-label">
-                        <FileText size={14} /> Detalhes & Anotações
-                      </div>
-                      <textarea 
-                        className="paper-textarea"
-                        placeholder="Escreva aqui horarios, salas, datas de provas, notas..."
-                        value={sub.content}
-                        onChange={(e) => updateContent(sub.id, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
+                <div className="plan-actions-footer">
+                  <button className="btn-advance" onClick={handleAdvanceStep}>
+                    Concluir Passo <ArrowRight size={16}/>
+                  </button>
+                  <button 
+                    className="btn-finish-plan" 
+                    onClick={() => setActivePlan(null)}
+                  >
+                    <CheckCircle2 size={16}/> Finalizar Sessão
+                  </button>
+                </div>
               </div>
-            )
-          })}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
 
+      </div>
     </div>
   );
 };

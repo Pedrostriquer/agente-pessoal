@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import { 
   LayoutDashboard, CheckSquare, Wallet, 
   GraduationCap, Settings, LogOut, Sparkles,
-  ChevronLeft, ChevronRight, Menu, X 
+  ChevronLeft, ChevronRight, Menu, X,
+  Dumbbell, // <--- Ícone da Academia
+  Mail    // <--- Ícone de E-mail
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, toggleSidebar, isMobile, userData, onLogout }) => {
@@ -18,11 +20,13 @@ const Sidebar = ({ isOpen, toggleSidebar, isMobile, userData, onLogout }) => {
     agentAvatar: '🤖'
   };
 
-  // Mapeamento de rotas
+  // Mapeamento de rotas - ATUALIZADO
   const menuItems = [
     { id: 'dashboard', path: '/', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'email', path: '/email', label: 'E-mail', icon: Mail },      // NOVO ITEM
     { id: 'tasks', path: '/tasks', label: 'To-Do & Listas', icon: CheckSquare },
     { id: 'finance', path: '/finance', label: 'Financeiro', icon: Wallet },
+    { id: 'gym', path: '/gym', label: 'Academia', icon: Dumbbell },    // NOVO ITEM
     { id: 'study', path: '/study', label: 'Estudo', icon: GraduationCap },
   ];
 

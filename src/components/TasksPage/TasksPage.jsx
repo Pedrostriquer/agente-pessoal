@@ -10,18 +10,19 @@ import {
 import { getMarketList, addMarketItem, removeMarketItem } from '../../services/marketService';
 import { getIdeasList, addIdea, removeIdea } from '../../services/ideasService';
 import { getGoalsList, createGoal, updateGoalProgress, removeGoal } from '../../services/goalsService';
+// Importando o serviço de To-Do
+import { getTodoList, createTodo, toggleTodoStatus, removeTodo } from '../../services/todoService';
 
 const TasksPage = ({ isSidebarOpen }) => {
   
-  const [activeTab, setActiveTab] = useState('market'); 
+  const [activeTab, setActiveTab] = useState('todo'); // Começa no To-Do para testar
   const [isLoading, setIsLoading] = useState(false);
 
   // --- ESTADOS DE DADOS ---
   const [market, setMarket] = useState([]);
   const [ideas, setIdeas] = useState([]);
   const [goals, setGoals] = useState([]);
-  // 'todos' continua local pois não tem rota na API ainda
-  const [todos, setTodos] = useState([{ id: 1, text: 'Tarefas locais (sem API)', done: false }]);
+  const [todos, setTodos] = useState([]); // Agora inicia vazio para receber da API
 
   // --- INPUTS GERAIS ---
   const [inputValue, setInputValue] = useState(''); 
@@ -43,21 +44,25 @@ const TasksPage = ({ isSidebarOpen }) => {
   }, [activeTab]);
 
   const loadData = async () => {
-    if (activeTab === 'todo') return;
-
     setIsLoading(true);
     try {
       if (activeTab === 'market') {
         const data = await getMarketList();
         setMarket(Array.isArray(data) ? data : data.items || []);
       }
-      if (activeTab === 'idea') {
+      else if (activeTab === 'idea') {
         const data = await getIdeasList();
         setIdeas(Array.isArray(data) ? data : data.ideas || []);
       }
-      if (activeTab === 'goals') {
+      else if (activeTab === 'goals') {
         const data = await getGoalsList();
         setGoals(Array.isArray(data) ? data : data.goals || []);
+      }
+      // Integração do To-Do
+      else if (activeTab === 'todo') {
+        const data = await getTodoList();
+        // Ajuste conforme o retorno do seu backend (array direto ou objeto { todos: [] })
+        setTodos(Array.isArray(data) ? data : data.todos || []);
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -72,7 +77,7 @@ const TasksPage = ({ isSidebarOpen }) => {
 
     try {
       if (activeTab === 'market') {
-        await addMarketItem(inputValue, 1); // Padrão qtd 1
+        await addMarketItem(inputValue, 1);
         setInputValue('');
         loadData();
       }
@@ -81,8 +86,11 @@ const TasksPage = ({ isSidebarOpen }) => {
         setInputValue('');
         loadData();
       }
+      // Integração To-Do
       else if (activeTab === 'todo') {
-        setTodos([...todos, { id: Date.now(), text: inputValue, done: false }]);
+        const newTodo = await createTodo(inputValue);
+        // Atualiza a lista localmente adicionando o novo item no topo
+        setTodos([newTodo, ...todos]);
         setInputValue('');
       }
       else if (activeTab === 'goals') {
@@ -115,8 +123,10 @@ const TasksPage = ({ isSidebarOpen }) => {
         await removeGoal(id);
         loadData();
       }
+      // Integração To-Do
       else if (activeTab === 'todo') {
-        setTodos(todos.filter(t => t.id !== id));
+        await removeTodo(id);
+        setTodos(todos.filter(t => (t.id || t._id) !== id));
       }
     } catch (error) {
       console.error("Erro ao remover:", error);
@@ -124,12 +134,25 @@ const TasksPage = ({ isSidebarOpen }) => {
     }
   };
 
+  // --- HANDLER DE TOGGLE (Check/Uncheck) ---
+  const handleToggleTodo = async (id, currentStatus) => {
+    try {
+      // Atualização Otimista (altera na tela antes do backend responder)
+      setTodos(prev => prev.map(t => 
+        (t.id === id || t._id === id) ? { ...t, done: !currentStatus } : t
+      ));
+      
+      await toggleTodoStatus(id, !currentStatus);
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      loadData(); // Recarrega dados reais em caso de erro
+    }
+  };
+
   // --- HANDLERS ESPECÍFICOS DE METAS ---
-  // Recebe o goalName (título) em vez do ID para contornar o bug da API
   const handleAddProgress = async (goalName) => {
     if (!progressValue) return;
     try {
-      // Enviamos o goalName no lugar do goalId
       await updateGoalProgress(goalName, progressValue, progressDesc || 'Atualização manual');
       setProgressValue('');
       setProgressDesc('');
@@ -142,7 +165,7 @@ const TasksPage = ({ isSidebarOpen }) => {
 
   // --- CONFIGURAÇÃO DAS ABAS ---
   const tabs = [
-    { id: 'todo', label: 'To-Do (Local)', icon: <ListTodo size={18}/> },
+    { id: 'todo', label: 'To-Do', icon: <ListTodo size={18}/> },
     { id: 'market', label: 'Mercado', icon: <ShoppingCart size={18}/> },
     { id: 'idea', label: 'Ideias', icon: <Lightbulb size={18}/> },
     { id: 'goals', label: 'Metas', icon: <Target size={18}/> },
@@ -230,7 +253,6 @@ const TasksPage = ({ isSidebarOpen }) => {
                     const isOpen = expandedGoalId === goal.id || expandedGoalId === goal._id;
                     const goalId = goal.id || goal._id;
                     
-                    // CORREÇÃO DE MAPPEAMENTO para a barra de progresso
                     const title = goal.goal_name || goal.title || 'Sem título';
                     const current = Number(goal.current_progress || goal.current_amount || goal.current || 0);
                     const target = Number(goal.target_amount || goal.target || 1);
@@ -264,7 +286,6 @@ const TasksPage = ({ isSidebarOpen }) => {
                                 <label>Descrição</label>
                                 <input placeholder="Ex: Economia mensal" value={progressDesc} onChange={e => setProgressDesc(e.target.value)} />
                               </div>
-                              {/* CORREÇÃO: Passando o título (goal_name) em vez do ID */}
                               <button className="btn-save-log" onClick={() => handleAddProgress(title)}>Salvar</button>
                             </div>
                             
@@ -288,16 +309,25 @@ const TasksPage = ({ isSidebarOpen }) => {
                   getCurrentList().map(item => {
                     const itemId = item.id || item._id;
                     
-                    // CORREÇÃO DE MAPPEAMENTO: Adicionei 'idea_content'
-                    const text = item.idea_content || item.item_name || item.content || item.text || item.itemName;
-                    
-                    const isDone = item.checked || item.done || false;
+                    // Mapeamento dos campos
+                    // Mercado: item_name, quantity
+                    // Ideia: idea_content
+                    // Todo: task, done
+                    const text = item.task || item.idea_content || item.item_name || item.text || 'Sem texto';
+                    const isDone = item.done || item.checked || false;
                     const quantity = item.quantity || 1;
 
                     return (
                       <div key={itemId} className={`universal-item ${isDone ? 'done' : ''}`}>
                          
-                         <button className="check-btn" style={{cursor: activeTab === 'todo' ? 'pointer' : 'default'}}>
+                         {/* Botão de Check - Ativo apenas para To-Do e Mercado se necessário */}
+                         <button 
+                            className="check-btn" 
+                            style={{cursor: activeTab === 'todo' ? 'pointer' : 'default'}}
+                            onClick={() => {
+                              if (activeTab === 'todo') handleToggleTodo(itemId, isDone);
+                            }}
+                         >
                             {isDone ? <CheckCircle2 size={22} className="check-icon done"/> : <Circle size={22} className="check-icon"/>}
                          </button>
   

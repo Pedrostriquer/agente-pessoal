@@ -11,6 +11,8 @@ import TasksPage from './components/TasksPage/TasksPage';
 import FinancePage from './components/FinancePage/FinancePage';
 import StudyPage from './components/StudyPage/StudyPage';
 import SettingsPage from './components/SettingsPage/SettingsPage';
+import GymPage from './components/GymPage/GymPage'; 
+import EmailPage from './components/EmailPage/EmailPage'; // <--- NOVO: Importação da página de E-mail
 
 // Componente "Guardião" para rotas protegidas
 const ProtectedRoutes = ({ isLoggedIn, children }) => {
@@ -28,23 +30,40 @@ function App() {
   // Verifica se já existe um token no localStorage ao carregar
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('user_token')); 
 
-  const userData = {
-    userName: 'Carlos Eduardo',
-    agentName: 'Jarvis',
-    agentAvatar: '🤖'
-  };
+  // Estado para dados do usuário (Recupera do localStorage se existir)
+  const [userData, setUserData] = useState(() => {
+    const savedUser = localStorage.getItem('user_data');
+    return savedUser ? JSON.parse(savedUser) : {
+      userName: 'Visitante',
+      agentName: 'MyAgent',
+      agentAvatar: '🤖'
+    };
+  });
 
   // 💥 CORREÇÃO CRÍTICA DE AUTENTICAÇÃO
   const handleLogin = (data) => {
-    // 1. Salva APENAS o accessToken para que o apiRequest o utilize corretamente
+    // 1. Salva o accessToken
     localStorage.setItem('user_token', data.accessToken);
-    // 2. Define o estado como logado
+    
+    // 2. Salva os dados do usuário retornados pela API (user.full_name)
+    if (data.user) {
+      const newUserData = {
+        userName: data.user.full_name || 'Usuário',
+        agentName: 'Jarvis', // Mantendo o mock até termos a config do agente
+        agentAvatar: '🤖'
+      };
+      localStorage.setItem('user_data', JSON.stringify(newUserData));
+      setUserData(newUserData);
+    }
+
     setIsLoggedIn(true);
   };
   
   const handleLogout = () => {
     localStorage.removeItem('user_token'); // Remove o token ao sair
+    localStorage.removeItem('user_data'); // Remove os dados do usuário
     setIsLoggedIn(false);
+    setUserData({ userName: 'Visitante', agentName: 'MyAgent', agentAvatar: '🤖' });
   };
 
   useEffect(() => {
@@ -108,6 +127,8 @@ function App() {
                       <Route path="/" element={<Dashboard {...layoutProps} />} />
                       <Route path="/tasks" element={<TasksPage {...layoutProps} />} />
                       <Route path="/finance" element={<FinancePage {...layoutProps} />} />
+                      <Route path="/gym" element={<GymPage {...layoutProps} />} /> 
+                      <Route path="/email" element={<EmailPage {...layoutProps} />} /> {/* <--- NOVO: Rota do E-mail */}
                       <Route path="/study" element={<StudyPage {...layoutProps} />} />
                       <Route path="/settings" element={<SettingsPage {...layoutProps} />} />
                       <Route path="/planner" element={<Navigate to="/tasks" replace />} />
