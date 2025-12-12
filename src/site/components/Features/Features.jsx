@@ -9,7 +9,7 @@ import {
 import { motion } from "framer-motion";
 import "./Features.css";
 
-// Importação da imagem correta (o Vite lida bem com espaços, mas certifique-se que o arquivo existe na pasta)
+// Importação da imagem
 import screenshotImage from "../../../assets/Captura de Tela 2025-12-07 às 19.47.10.png";
 
 const containerVariants = {
@@ -71,16 +71,16 @@ export default function Features() {
     <section className="features-section">
       <div className="features-container">
         
-        {/* Header Animado - Estrutura Reforçada */}
+        {/* CORREÇÃO: Classe renomeada para não conflitar com StudyPage */}
         <motion.div 
-          className="section-header"
+          className="ft-section-header"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <div className="tag-wrapper">
-            <motion.span className="tag">Funcionalidades</motion.span>
+            <motion.span className="ft-tag">Funcionalidades</motion.span>
           </div>
           <h2>Um cérebro digital,<br/>vivendo no seu bolso.</h2>
         </motion.div>
@@ -94,7 +94,8 @@ export default function Features() {
         >
           
           <SpotlightCard className="bento-card card-platform" variants={itemVariants}>
-            <div className="card-header">
+            {/* CORREÇÃO: Classe renomeada para não conflitar com Dashboard */}
+            <div className="ft-card-header">
               <div className="icon-badge blue"><LayoutGrid size={20} /></div>
               <div className="text-content">
                 <h3>Visão de Comandante</h3>
@@ -163,7 +164,8 @@ export default function Features() {
           </SpotlightCard>
 
           <SpotlightCard className="bento-card card-integrations" spotlightColor="rgba(245, 158, 11, 0.2)" variants={itemVariants}>
-            <div className="card-header">
+            {/* CORREÇÃO: Classe renomeada */}
+            <div className="ft-card-header">
               <div className="icon-badge orange"><Zap size={20} /></div>
               <div className="text-content">
                 <h3>Conectado a Tudo</h3>

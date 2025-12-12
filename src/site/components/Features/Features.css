@@ -13,17 +13,17 @@
 
 .features-container { max-width: 1100px; width: 100%; }
 
-/* --- HEADER REFORÇADO --- */
-.section-header { 
+/* --- HEADER ESPECÍFICO DE FEATURES --- */
+.ft-section-header { 
   text-align: center; 
   margin-bottom: 4rem;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Garante centralização horizontal */
-  gap: 1rem; /* Espaço consistente entre Tag e Título */
+  align-items: center;
+  gap: 1rem;
 }
 
-.section-header h2 { 
+.ft-section-header h2 { 
   font-size: 3rem; 
   font-weight: 800; 
   color: #0F172A; 
@@ -37,7 +37,7 @@
   justify-content: center;
 }
 
-.tag { 
+.ft-tag { 
   display: inline-block; 
   padding: 6px 16px; 
   background: rgba(37, 211, 102, 0.1); 
@@ -54,33 +54,30 @@
 .bento-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
 .bento-card { grid-column: span 1; display: flex; flex-direction: column; }
 
-/* --- ESTILO DOS CARDS (ATUALIZADO COM LUZ VAZANDO) --- */
+/* --- ESTILO DOS CARDS --- */
 .spotlight-card {
   position: relative; border-radius: 24px;
   background-color: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  overflow: visible; /* MUDANÇA IMPORTANTE: Permite que a sombra saia do card */
+  overflow: visible;
   display: flex; flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Garante que o conteúdo interno ainda seja cortado nas bordas arredondadas */
   clip-path: inset(0 round 24px); 
 }
 
 .spotlight-card:hover { 
   transform: translateY(-4px);
-  /* ADICIONADO: Sombra colorida externa para o efeito de luz vazando */
   box-shadow: 
     0 20px 25px -5px rgba(0, 0, 0, 0.1), 
     0 8px 10px -6px rgba(0, 0, 0, 0.05),
-    0 0 40px -5px var(--spotlight-color); /* O brilho externo */
+    0 0 40px -5px var(--spotlight-color);
 }
 
-/* Brilho do Mouse (Borda Interna - Mantido e intensificado) */
 .spotlight-card::before {
   content: ""; position: absolute; inset: 0; border-radius: 24px; 
-  padding: 2px; /* Borda interna ligeiramente mais grossa */
+  padding: 2px;
   background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 50%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
@@ -90,40 +87,43 @@
 
 .card-inner-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; width: 100%; background: transparent; border-radius: 24px; overflow: hidden; }
 
-/* --- HEADER PADRÃO --- */
-.card-header { padding: 2rem 2rem 1rem 2rem; display: flex; flex-direction: column; gap: 1rem; }
-.icon-badge { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
-.icon-badge.blue { background: #E0F2FE; color: #0284C7; }
-.icon-badge.orange { background: #FFEDD5; color: #EA580C; }
+/* --- HEADER ESPECÍFICO DOS CARDS --- */
+.ft-card-header { 
+  padding: 2rem 2rem 1rem 2rem; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1rem; 
+}
+
+/* Escopo para garantir que não afete outros ícones */
+.features-section .icon-badge { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
+.features-section .icon-badge.blue { background: #E0F2FE; color: #0284C7; }
+.features-section .icon-badge.orange { background: #FFEDD5; color: #EA580C; }
+
 .text-content h3 { font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0; letter-spacing: -0.5px; }
 .text-content p { font-size: 0.95rem; color: #64748B; line-height: 1.5; margin: 0; }
 
-/* --- CARD 1: PLATAFORMA --- */
 .card-platform { grid-column: span 3; }
 .card-image-wrapper { margin-top: auto; padding-left: 2rem; padding-top: 1rem; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
 .image-container { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); border-left: 1px solid rgba(0,0,0,0.06); border-top-left-radius: 12px; padding: 6px 0 0 6px; box-shadow: -10px -10px 30px rgba(0,0,0,0.08); }
 .image-container img { width: 100%; display: block; border-top-left-radius: 8px; }
 
-/* --- CARD 2: WHATSAPP (NOVA COR E FUNDO) --- */
 .card-whatsapp { 
     grid-column: span 2; 
-    background: #ffffff; /* Fundo Branco Limpo */
+    background: #ffffff;
     position: relative;
 }
-/* Novo padrão sutil para fundo branco */
 .whatsapp-bg-clean {
     position: absolute; inset: 0;
-    /* Pontos verdes sutis */
     background-image: radial-gradient(circle, #25D366 0.8px, transparent 0.8px);
     background-size: 24px 24px;
-    opacity: 0.2; /* Bem suave */
+    opacity: 0.2;
     z-index: 0;
 }
 .card-content-wrapper.center-vertical {
   padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 1.5rem; position: relative; z-index: 2;
 }
 
-/* Notificação iOS */
 .ios-notification {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
@@ -144,7 +144,6 @@
 .card-text-bottom h3 { font-size: 1.2rem; font-weight: 700; color: #0F172A; margin: 0 0 4px 0; }
 .card-text-bottom p { font-size: 0.85rem; color: #64748B; }
 
-/* --- CARD 3: FINANÇAS --- */
 .card-finance { grid-column: span 2; }
 .card-header-simple { padding: 1.5rem 1.5rem 0.5rem 1.5rem; }
 .card-header-simple h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0 0 4px 0; }
@@ -171,7 +170,6 @@
 .exp-info small { font-size: 0.7rem; color: #94A3B8; }
 .exp-amount { font-size: 0.9rem; font-weight: 700; color: #DC2626; }
 
-/* --- CARD 4: INTEGRAÇÕES --- */
 .card-integrations { grid-column: span 3; }
 .widgets-container {
     padding: 0 2rem 2rem 2rem;
@@ -213,7 +211,6 @@
 .checked .checkbox { background: #2563EB; }
 .empty { border: 1px solid #CBD5E1; }
 
-/* MOBILE */
 @media (max-width: 900px) {
     .bento-grid { grid-template-columns: 1fr; }
     .card-platform, .card-whatsapp, .card-finance, .card-integrations { grid-column: span 1; }

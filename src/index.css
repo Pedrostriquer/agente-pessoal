@@ -22,14 +22,24 @@ a:hover {
   color: #535bf2;
 }
 
-/* MODIFICAÇÃO PARA O SITE FUNCIONAR */
+/* === CORREÇÃO DE LAYOUT GLOBAL === */
 body {
   margin: 0;
   padding: 0;
-  /* Fundo transparente aqui para o Background Global do site funcionar */
-  background-color: transparent; 
-  /* Fallback para o app principal se não tiver wrapper */
-  /* Mas como o Dashboard tem wrapper com fundo, isso não deve quebrar */
+  width: 100vw;
+  min-height: 100vh;
+  background-color: transparent; /* Importante para o site */
+  text-align: left; 
+}
+
+/* Removemos a centralização e largura máxima padrão do Vite */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: left; 
+  display: block; /* Garante que não seja um flexbox centralizado */
 }
 
 h1 {
@@ -37,6 +47,7 @@ h1 {
   line-height: 1.1;
 }
 
+/* Estilo base de botão (seguro) */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -44,12 +55,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
@@ -61,15 +68,10 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }
+
+/* --- VARIÁVEIS DE TEMA --- */
 :root {
-  /* Cores Padrão (Light Mode) */
   --bg-body: #f8fafc;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
@@ -81,7 +83,6 @@ button:focus-visible {
   --sidebar-bg: #ffffff;
 }
 
-/* --- MODO ESCURO (Dark Mode) --- */
 [data-theme="dark"] {
   --bg-body: #0f172a;
   --bg-card: #1e293b;
@@ -94,21 +95,16 @@ button:focus-visible {
   --sidebar-bg: #1e293b;
 }
 
-/* --- APLICAÇÃO GLOBAL E FORÇADA --- */
-
-body, div, button, input, textarea, aside {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Wrappers principais continuam com fundo definido */
+/* Aplicação das variáveis */
+body, 
 [data-theme="dark"] .dsh-wrapper,
 [data-theme="dark"] .finance-wrapper,
 [data-theme="dark"] .tasks-page-wrapper,
 [data-theme="dark"] .study-wrapper,
 [data-theme="dark"] .settings-wrapper,
 [data-theme="dark"] .login-page-wrapper {
-  background-color: var(--bg-body) !important;
-  color: var(--text-main) !important;
+  background-color: var(--bg-body);
+  color: var(--text-main);
 }
 
 [data-theme="dark"] .sidebar-container,
@@ -116,54 +112,8 @@ body, div, button, input, textarea, aside {
 [data-theme="dark"] .summary-card,
 [data-theme="dark"] .fin-panel,
 [data-theme="dark"] .settings-card,
-[data-theme="dark"] .list-card,
-[data-theme="dark"] .plan-card-item,
-[data-theme="dark"] .day-card,
-[data-theme="dark"] .subject-card,
-[data-theme="dark"] .subject-header,
-[data-theme="dark"] .subject-body {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-
-[data-theme="dark"] input,
-[data-theme="dark"] textarea,
-[data-theme="dark"] .user-card,
-[data-theme="dark"] .collapse-toggle-btn,
-[data-theme="dark"] .nav-btn:hover,
-[data-theme="dark"] .count-pill,
-[data-theme="dark"] .add-row input,
-[data-theme="dark"] .item-row:hover,
-[data-theme="dark"] .universal-item {
-  background-color: var(--bg-input) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-
-[data-theme="dark"] h1, 
-[data-theme="dark"] h2, 
-[data-theme="dark"] h3, 
-[data-theme="dark"] h4,
-[data-theme="dark"] strong,
-[data-theme="dark"] .nav-label-text {
-  color: var(--text-main) !important;
-}
-
-[data-theme="dark"] p, 
-[data-theme="dark"] span, 
-[data-theme="dark"] small,
-[data-theme="dark"] .nav-btn {
-  color: var(--text-sub);
-}
-
-[data-theme="dark"] .mobile-menu-trigger {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-
-[data-theme="dark"] .nav-btn.active {
-  background-color: rgba(16, 185, 129, 0.2) !important;
-  color: var(--accent-color) !important;
+[data-theme="dark"] .list-card {
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+  color: var(--text-main);
 }
