@@ -1,6 +1,6 @@
 // src/services/api.js
 
-let apiUrl = 'http://localhost:3000'; 
+let apiUrl = 'https://whale-app-ccv5z.ondigitalocean.app'; 
 
 export const API_BASE_URL = apiUrl;
 
