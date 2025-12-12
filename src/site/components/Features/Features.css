@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.features-section {
+  position: relative;
+  background-color: transparent;
+  padding: 6rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  z-index: 1;
+}
+
+.features-container { max-width: 1100px; width: 100%; }
+
+/* --- HEADER REFORÇADO --- */
+.section-header { 
+  text-align: center; 
+  margin-bottom: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Garante centralização horizontal */
+  gap: 1rem; /* Espaço consistente entre Tag e Título */
+}
+
+.section-header h2 { 
+  font-size: 3rem; 
+  font-weight: 800; 
+  color: #0F172A; 
+  line-height: 1.1; 
+  letter-spacing: -1px; 
+  margin: 0;
+}
+
+.tag-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.tag { 
+  display: inline-block; 
+  padding: 6px 16px; 
+  background: rgba(37, 211, 102, 0.1); 
+  color: #075E54; 
+  border-radius: 30px; 
+  font-size: 0.85rem; 
+  font-weight: 700; 
+  border: 1px solid rgba(37, 211, 102, 0.2); 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+}
+
+/* --- GRID BENTO --- */
+.bento-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
+.bento-card { grid-column: span 1; display: flex; flex-direction: column; }
+
+/* --- ESTILO DOS CARDS (ATUALIZADO COM LUZ VAZANDO) --- */
+.spotlight-card {
+  position: relative; border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  overflow: visible; /* MUDANÇA IMPORTANTE: Permite que a sombra saia do card */
+  display: flex; flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Garante que o conteúdo interno ainda seja cortado nas bordas arredondadas */
+  clip-path: inset(0 round 24px); 
+}
+
+.spotlight-card:hover { 
+  transform: translateY(-4px);
+  /* ADICIONADO: Sombra colorida externa para o efeito de luz vazando */
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+    0 8px 10px -6px rgba(0, 0, 0, 0.05),
+    0 0 40px -5px var(--spotlight-color); /* O brilho externo */
+}
+
+/* Brilho do Mouse (Borda Interna - Mantido e intensificado) */
+.spotlight-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: 24px; 
+  padding: 2px; /* Borda interna ligeiramente mais grossa */
+  background: radial-gradient(400px circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 50%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
+  z-index: 3;
+}
+.spotlight-card:hover::before { opacity: 1; }
+
+.card-inner-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; width: 100%; background: transparent; border-radius: 24px; overflow: hidden; }
+
+/* --- HEADER PADRÃO --- */
+.card-header { padding: 2rem 2rem 1rem 2rem; display: flex; flex-direction: column; gap: 1rem; }
+.icon-badge { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; }
+.icon-badge.blue { background: #E0F2FE; color: #0284C7; }
+.icon-badge.orange { background: #FFEDD5; color: #EA580C; }
+.text-content h3 { font-size: 1.4rem; font-weight: 700; color: #1e293b; margin: 0 0 0.5rem 0; letter-spacing: -0.5px; }
+.text-content p { font-size: 0.95rem; color: #64748B; line-height: 1.5; margin: 0; }
+
+/* --- CARD 1: PLATAFORMA --- */
+.card-platform { grid-column: span 3; }
+.card-image-wrapper { margin-top: auto; padding-left: 2rem; padding-top: 1rem; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
+.image-container { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); border-left: 1px solid rgba(0,0,0,0.06); border-top-left-radius: 12px; padding: 6px 0 0 6px; box-shadow: -10px -10px 30px rgba(0,0,0,0.08); }
+.image-container img { width: 100%; display: block; border-top-left-radius: 8px; }
+
+/* --- CARD 2: WHATSAPP (NOVA COR E FUNDO) --- */
+.card-whatsapp { 
+    grid-column: span 2; 
+    background: #ffffff; /* Fundo Branco Limpo */
+    position: relative;
+}
+/* Novo padrão sutil para fundo branco */
+.whatsapp-bg-clean {
+    position: absolute; inset: 0;
+    /* Pontos verdes sutis */
+    background-image: radial-gradient(circle, #25D366 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+    opacity: 0.2; /* Bem suave */
+    z-index: 0;
+}
+.card-content-wrapper.center-vertical {
+  padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 1.5rem; position: relative; z-index: 2;
+}
+
+/* Notificação iOS */
+.ios-notification {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 12px;
+  width: 100%; max-width: 280px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.notif-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.notif-icon img { width: 20px; height: 20px; border-radius: 4px; display: block; }
+.notif-app { font-size: 0.75rem; text-transform: uppercase; color: #64748B; font-weight: 600; flex: 1; }
+.notif-time { font-size: 0.7rem; color: #94A3B8; }
+.notif-body strong { font-size: 0.9rem; color: #0F172A; display: block; margin-bottom: 2px; }
+.notif-body p { font-size: 0.9rem; color: #334155; margin: 0; }
+
+.card-text-bottom { text-align: center; margin-top: auto; }
+.card-text-bottom h3 { font-size: 1.2rem; font-weight: 700; color: #0F172A; margin: 0 0 4px 0; }
+.card-text-bottom p { font-size: 0.85rem; color: #64748B; }
+
+/* --- CARD 3: FINANÇAS --- */
+.card-finance { grid-column: span 2; }
+.card-header-simple { padding: 1.5rem 1.5rem 0.5rem 1.5rem; }
+.card-header-simple h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0 0 4px 0; }
+.card-header-simple p { font-size: 0.85rem; color: #64748B; margin: 0; }
+
+.finance-dashboard-mini { padding: 0 1.5rem 1.5rem 1.5rem; display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
+.balance-card {
+  background: linear-gradient(135deg, #1E293B, #0F172A);
+  color: white; border-radius: 12px; padding: 12px 16px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+}
+.balance-card .lbl { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+.balance-card .val { font-size: 1.5rem; font-weight: 700; margin: 4px 0 8px 0; }
+.trend { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #FCA5A5; background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 20px; width: fit-content; }
+
+.expense-row {
+  display: flex; align-items: center; gap: 10px;
+  background: white; padding: 10px; border-radius: 10px;
+  border: 1px solid #F1F5F9;
+}
+.exp-icon { width: 32px; height: 32px; background: #FEF3C7; color: #D97706; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.exp-info { display: flex; flex-direction: column; flex: 1; }
+.exp-info span { font-size: 0.85rem; font-weight: 600; color: #334155; }
+.exp-info small { font-size: 0.7rem; color: #94A3B8; }
+.exp-amount { font-size: 0.9rem; font-weight: 700; color: #DC2626; }
+
+/* --- CARD 4: INTEGRAÇÕES --- */
+.card-integrations { grid-column: span 3; }
+.widgets-container {
+    padding: 0 2rem 2rem 2rem;
+    display: flex; flex-direction: column; gap: 1.5rem;
+    margin-top: auto;
+}
+
+.widget-row.google-row {
+    background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.widget-title { font-size: 0.75rem; font-weight: 700; color: #64748B; text-transform: uppercase; }
+.logos-group { display: flex; align-items: center; gap: 8px; }
+.logos-group img { width: 24px; height: 24px; transition: transform 0.2s; }
+.logos-group img:hover { transform: scale(1.1); }
+.sync-badge { font-size: 0.7rem; color: #16A34A; background: #DCFCE7; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 8px; }
+
+.widgets-split {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+}
+
+.mini-list-widget {
+    background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.list-header { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; margin-bottom: 4px; }
+.list-header span { font-size: 0.8rem; font-weight: 700; color: #334155; }
+.text-green-600 { color: #16A34A; }
+.text-blue-600 { color: #2563EB; }
+
+.list-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.list-items li { font-size: 0.8rem; color: #64748B; display: flex; align-items: center; gap: 6px; }
+
+.bullet { width: 6px; height: 6px; border-radius: 50%; }
+.bullet.green { background: #16A34A; }
+
+.checked { text-decoration: line-through; color: #94A3B8; }
+.checkbox { width: 14px; height: 14px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; }
+.checked .checkbox { background: #2563EB; }
+.empty { border: 1px solid #CBD5E1; }
+
+/* MOBILE */
+@media (max-width: 900px) {
+    .bento-grid { grid-template-columns: 1fr; }
+    .card-platform, .card-whatsapp, .card-finance, .card-integrations { grid-column: span 1; }
+    .widgets-split { grid-template-columns: 1fr; }
+}

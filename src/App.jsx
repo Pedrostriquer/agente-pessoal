@@ -12,7 +12,10 @@ import FinancePage from './components/FinancePage/FinancePage';
 import StudyPage from './components/StudyPage/StudyPage';
 import SettingsPage from './components/SettingsPage/SettingsPage';
 import GymPage from './components/GymPage/GymPage'; 
-import EmailPage from './components/EmailPage/EmailPage'; // <--- NOVO: Importação da página de E-mail
+import EmailPage from './components/EmailPage/EmailPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage/PrivacyPolicyPage';
+import TermsOfUsePage from './components/PrivacyPolicyPage/TermsOfUsePage';
+import SiteHome from './site/SiteHome'; // <--- IMPORTAÇÃO AQUI
 
 // Componente "Guardião" para rotas protegidas
 const ProtectedRoutes = ({ isLoggedIn, children }) => {
@@ -40,28 +43,23 @@ function App() {
     };
   });
 
-  // 💥 CORREÇÃO CRÍTICA DE AUTENTICAÇÃO
   const handleLogin = (data) => {
-    // 1. Salva o accessToken
     localStorage.setItem('user_token', data.accessToken);
-    
-    // 2. Salva os dados do usuário retornados pela API (user.full_name)
     if (data.user) {
       const newUserData = {
         userName: data.user.full_name || 'Usuário',
-        agentName: 'Jarvis', // Mantendo o mock até termos a config do agente
+        agentName: 'Jarvis',
         agentAvatar: '🤖'
       };
       localStorage.setItem('user_data', JSON.stringify(newUserData));
       setUserData(newUserData);
     }
-
     setIsLoggedIn(true);
   };
   
   const handleLogout = () => {
-    localStorage.removeItem('user_token'); // Remove o token ao sair
-    localStorage.removeItem('user_data'); // Remove os dados do usuário
+    localStorage.removeItem('user_token');
+    localStorage.removeItem('user_data');
     setIsLoggedIn(false);
     setUserData({ userName: 'Visitante', agentName: 'MyAgent', agentAvatar: '🤖' });
   };
@@ -96,8 +94,15 @@ function App() {
           <StartingIA_V3 />
         ) : (
           <Routes>
-            {/* ROTA PÚBLICA PARA CRIAÇÃO DO AGENTE (Sem botão no menu) */}
+            {/* ROTA PÚBLICA PARA CRIAÇÃO DO AGENTE */}
             <Route path="/start" element={<StartingIA_V3 />} />
+
+            {/* ROTA DO SITE INSTITUCIONAL */}
+            <Route path="/site" element={<SiteHome />} /> {/* <--- ROTA AQUI */}
+
+            {/* ROTAS PÚBLICAS LEGAIS */}
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsOfUsePage />} />
 
             {/* ROTA DE LOGIN */}
             <Route 
@@ -128,7 +133,7 @@ function App() {
                       <Route path="/tasks" element={<TasksPage {...layoutProps} />} />
                       <Route path="/finance" element={<FinancePage {...layoutProps} />} />
                       <Route path="/gym" element={<GymPage {...layoutProps} />} /> 
-                      <Route path="/email" element={<EmailPage {...layoutProps} />} /> {/* <--- NOVO: Rota do E-mail */}
+                      <Route path="/email" element={<EmailPage {...layoutProps} />} />
                       <Route path="/study" element={<StudyPage {...layoutProps} />} />
                       <Route path="/settings" element={<SettingsPage {...layoutProps} />} />
                       <Route path="/planner" element={<Navigate to="/tasks" replace />} />

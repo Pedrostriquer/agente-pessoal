@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #25D366; /* WhatsApp Green */
+  --primary-dark: #075E54;
+  --bg-color: #F8FAFC; /* Cinza claro de fundo */
+  --text-main: #0F172A; /* Azul escuro quase preto */
+  --text-secondary: #64748B;
+  --glass-border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* --- Base & Reset --- */
+* { box-sizing: border-box; }
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg-color);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden; /* Importante para conter o gradient orb */
+  display: flex;
+  align-items: center;
+}
+
+/* --- Background Orbs --- */
+.hero-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.gradient-orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.12; }
+.orb-1 { width: 800px; height: 800px; background: #25D366; top: -30%; right: -20%; }
+.orb-2 { width: 600px; height: 600px; background: #128C7E; bottom: -20%; left: -10%; }
+
+/* --- GRID LAYOUT ESTRUTURAL --- */
+.container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1800px; /* Limite seguro para telas muito grandes */
+  margin: 0 auto;
+  padding: 0 5vw; /* Espaçamento lateral percentual */
+  display: grid;
+  grid-template-columns: 45% 55%; /* Distribuição de espaço */
+  align-items: center;
+}
+
+/* LADO ESQUERDO: TEXTO */
+.content-side {
+  text-align: left;
+  max-width: 650px; 
+}
+
+.pill-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #0f172a; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2); }
+.title { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: var(--text-main); }
+.text-gradient { background: linear-gradient(135deg, #25D366, #0e7490); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.description { font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 2.5rem; line-height: 1.6; }
+
+/* Botões */
+.buttons-wrapper { display: flex; gap: 1rem; }
+.btn-primary { padding: 14px 28px; background: #0F172A; color: white; border: none; border-radius: 12px; font-weight: 600; display: flex; gap: 8px; align-items: center; cursor: pointer; transition: 0.2s; }
+.btn-primary:hover { background: black; transform: translateY(-2px); }
+.btn-outline { padding: 14px 28px; background: transparent; border: 1px solid #cbd5e1; border-radius: 12px; font-weight: 600; cursor: pointer; color: #334155; transition: 0.2s; }
+.btn-outline:hover { background: #fff; border-color: #94a3b8; }
+
+/* --- LADO DIREITO: COMPOSIÇÃO VISUAL --- */
+.visual-side {
+  display: flex;
+  justify-content: flex-end; /* Alinha o conteúdo (composition-area) à direita da célula do grid */
+  align-items: center;
+  height: 600px;
+}
+
+/* --- composition-area: O Palco de Coordenadas --- */
+.composition-area {
+  position: relative;
+  width: 700px; /* Largura definida para a composição */
+  height: 500px; 
+}
+
+/* --- 1. CHAT INTERFACE --- */
+/* Posicionado relativo ao composition-area */
+.chat-interface {
+  position: absolute;
+  left: 0; /* Cola na esquerda da área de composição */
+  bottom: 20px; /* Alinhado na parte inferior */
+  width: 340px; 
+  min-height: 460px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px); border: var(--glass-border); border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column; padding: 1.5rem; z-index: 10;
+}
+.chat-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.avatar-wrapper img { width: 42px; height: 42px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.header-info strong { font-size: 0.95rem; display: block; }
+.header-info span { font-size: 0.75rem; color: var(--primary); font-weight: 600; text-transform: uppercase; }
+.chat-content { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.message { padding: 12px 16px; border-radius: 16px; font-size: 0.9rem; line-height: 1.5; max-width: 85%; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.user-message { background: #D9FDD3; color: #111; align-self: flex-end; border-top-right-radius: 4px; }
+.ai-message { background: #fff; color: #111; align-self: flex-start; border-top-left-radius: 4px; }
+.sub-text { font-size: 0.8rem; color: #64748B; margin-top: 4px; }
+.loading-bubble { padding: 12px 18px; width: fit-content; }
+.dots { display: flex; gap: 4px; }
+.dots span { width: 5px; height: 5px; background: #94a3b8; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+/* Input Área (Corrigida para caber o texto) */
+.input-area { margin-top: auto; background: white; border-radius: 50px; padding: 6px; display: flex; align-items: center; gap: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+.input-field { flex: 1; height: 36px; padding: 0 12px; font-size: 0.9rem; color: #334155; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
+.typing-text { display: inline-block; border-right: 2px solid var(--primary); padding-right: 2px; }
+.placeholder { color: #9CA3AF; }
+.send-btn { width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; transition: 0.3s; }
+
+/* --- 2. FINANCE WIDGET (CARTÃO) --- */
+/* Posicionado relativo ao composition-area */
+.finance-widget {
+  position: absolute;
+  right: 0; /* Cola na extrema direita da área de composição */
+  top: 40px; 
+  width: 280px; 
+  /* Ajustes para evitar vazamento */
+  height: auto;
+  min-height: 170px;
+  background: linear-gradient(145deg, #ffffff 0%, #f0f3f5 100%);
+  border-radius: 16px; padding: 1.25rem;
+  box-shadow: -15px 15px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.8) inset;
+  z-index: 20; display: flex; flex-direction: column; justify-content: space-between;
+  border: 1px solid rgba(255,255,255,1);
+}
+.card-shine { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%); opacity: 0.5; pointer-events: none; border-radius: 16px; }
+
+/* Saldo */
+.widget-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 0.75rem; /* Reduzido levemente para encaixar melhor */
+}
+.bank-logo { display: flex; }
+.circle { width: 20px; height: 20px; border-radius: 50%; opacity: 0.8; }
+.circle.red { background: #eb001b; margin-right: -8px; }
+.circle.orange { background: #f79e1b; }
+.menu-icon { color: #94a3b8; }
+.balance-section { margin-bottom: auto; }
+.label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 600; }
+.balance-value { 
+  font-size: 2rem; /* Ajustado para 2rem para evitar quebra */
+  font-weight: 700; 
+  color: #0F172A; 
+  display: flex; 
+  align-items: baseline; 
+  gap: 4px; 
+  transition: color 0.3s; 
+}
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.updating .tabular-nums { color: #dc2626; } /* Fica vermelho na animação */
+.currency { font-size: 1rem; font-weight: 500; color: #94a3b8; }
+
+.card-footer { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: flex-end; 
+  padding-top: 0.5rem; /* Espaço extra para o rodapé */
+}
+.card-num { font-family: monospace; color: #64748B; letter-spacing: 2px; font-size: 0.85rem; display: block; }
+.card-name { font-size: 0.6rem; color: #94a3b8; font-weight: 600; letter-spacing: 1px; margin-top: 4px; display: block; }
+.visa-tag { font-weight: 800; font-style: italic; color: #1e293b; font-size: 1.1rem; }
+
+/* EXTRATO FLUTUANTE (POPOVER) */
+.expense-popover {
+  position: absolute;
+  bottom: -60px;
+  left: 50%; transform: translateX(-50%);
+  background: white; padding: 8px 14px; border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px;
+  width: 220px; border: 1px solid #f1f5f9;
+}
+.expense-icon-bg { width: 24px; height: 24px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #dc2626; }
+.expense-text { display: flex; flex-direction: column; line-height: 1.2; }
+.expense-text span { font-size: 0.8rem; font-weight: 600; color: #334155; }
+.expense-text small { font-size: 0.7rem; color: #dc2626; font-weight: 600; }
+
+/* --- RESPONSIVIDADE (Tablets e Celulares) --- */
+@media (max-width: 1024px) {
+  .container { 
+    grid-template-columns: 1fr; /* Empilha em uma única coluna */
+    padding: 0 2rem;
+  }
+  .content-side { 
+    max-width: 100%; text-align: center; margin-bottom: 3rem; 
+  }
+  .buttons-wrapper { justify-content: center; }
+  
+  .visual-side { justify-content: center; height: auto; }
+  
+  /* Centraliza a área de composição no mobile */
+  .composition-area { width: 340px; height: 600px; margin-left: auto; margin-right: auto; }
+  
+  /* Posicionamento dos elementos dentro da composition-area no mobile */
+  .chat-interface { 
+    left: 50%; transform: translateX(-50%); 
+    width: 340px;
+    top: auto; bottom: 0;
+  }
+  
+  /* Coloca o Card acima do chat no topo */
+  .finance-widget { 
+    right: auto; left: 50%; transform: translateX(-50%); 
+    top: 0; width: 280px; 
+    z-index: 25; 
+  }
+}

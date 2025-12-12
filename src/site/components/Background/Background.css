@@ -1,0 +1,41 @@
+.global-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* z-index: -1; */
+    background-color: #F8FAFC; /* Base clara */
+    overflow: hidden;
+    pointer-events: none;
+}
+  
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px); /* O segredo do gradiente suave */
+    opacity: 0.35; /* Suave para não brigar com o texto */
+}
+  
+.orb-primary {
+    width: 80vw;
+    height: 80vw;
+    background: radial-gradient(circle, #25D366 0%, rgba(37, 211, 102, 0) 70%);
+    top: -40%;
+    right: -20%;
+}
+  
+.orb-secondary {
+    width: 70vw;
+    height: 70vw;
+    background: radial-gradient(circle, #0e7490 0%, rgba(14, 116, 144, 0) 70%);
+    bottom: -30%;
+    left: -20%;
+}
+
+.noise-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.6;
+}
