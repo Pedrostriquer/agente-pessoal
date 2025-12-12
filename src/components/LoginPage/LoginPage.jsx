@@ -11,7 +11,7 @@ const LoginPage = ({ onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // Seu Client ID foi inserido aqui
+  // Seu Client ID
   const GOOGLE_CLIENT_ID = "249946168812-mn5kigsrb2qf1epps45g9osv3ks843t7.apps.googleusercontent.com";
 
   const handleStandardLogin = async (e) => {
@@ -31,13 +31,12 @@ const LoginPage = ({ onLoginSuccess }) => {
   };
 
   const handleGoogleLoginSuccess = async (credentialResponse) => {
-    // O 'credential' que recebemos aqui é o idToken que o backend espera.
     const idToken = credentialResponse.credential;
     if (!idToken) {
-        setIsGoogleLoading(false);
-        return alert("Não foi possível obter o token de credencial do Google.");
+      setIsGoogleLoading(false);
+      return alert("Não foi possível obter o token de credencial do Google.");
     }
-    
+
     try {
       const data = await loginWithGoogleService(idToken);
       if (data.accessToken) {
@@ -96,7 +95,7 @@ const LoginPage = ({ onLoginSuccess }) => {
                 </button>
               </div>
               <button type="submit" className="btn-login" disabled={isLoading || isGoogleLoading}>
-                {isLoading ? <span className="flex-center"><Loader2 className="spin" size={20}/> Entrando...</span> : "Entrar"}
+                {isLoading ? <span className="flex-center"><Loader2 className="spin" size={20} /> Entrando...</span> : "Entrar"}
               </button>
             </form>
 
@@ -106,30 +105,28 @@ const LoginPage = ({ onLoginSuccess }) => {
               <GoogleLogin
                 onSuccess={handleGoogleLoginSuccess}
                 onError={handleGoogleLoginError}
-                useOneTap={false} // Desabilita o pop-up automático ao carregar a página
+                useOneTap={false}
                 shape="rectangular"
                 theme="outline"
                 size="large"
               />
             </div>
-            
+
             <button
-                onClick={() => {
-                  setIsGoogleLoading(true);
-                  // Truque: Encontra o botão real do Google e clica nele
-                  const googleButton = document.querySelector('div[role="button"][aria-labelledby="button-label"]');
-                  if (googleButton) {
-                    googleButton.click();
-                  } else {
-                    // Fallback caso o botão não seja encontrado
-                     handleGoogleLoginError();
-                  }
-                }}
-                className="btn-google"
-                disabled={isGoogleLoading || isLoading}
+              onClick={() => {
+                setIsGoogleLoading(true);
+                const googleButton = document.querySelector('div[role="button"][aria-labelledby="button-label"]');
+                if (googleButton) {
+                  googleButton.click();
+                } else {
+                  handleGoogleLoginError();
+                }
+              }}
+              className="btn-google"
+              disabled={isGoogleLoading || isLoading}
             >
               {isGoogleLoading ? (
-                <span className="flex-center"><Loader2 className="spin" size={20}/> Verificando...</span>
+                <span className="flex-center"><Loader2 className="spin" size={20} /> Verificando...</span>
               ) : (
                 <>
                   <GoogleIcon />
@@ -137,8 +134,26 @@ const LoginPage = ({ onLoginSuccess }) => {
                 </>
               )}
             </button>
-            
-            <div className="form-footer">Não tem conta? <a href="/start">Cadastre-se</a></div>
+
+            <div className="form-footer">
+              <p style={{ marginBottom: '15px' }}>
+                Não tem conta? <a href="/start">Cadastre-se</a>
+              </p>
+
+              {/* --- LINK PARA TERMOS E PRIVACIDADE --- */}
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'center',
+                fontSize: '12px',
+                borderTop: '1px solid #f1f5f9',
+                paddingTop: '15px'
+              }}>
+                <a href="/privacy" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: '500' }}>Privacidade</a>
+                <a href="/terms" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: '500' }}>Termos de Uso</a>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
